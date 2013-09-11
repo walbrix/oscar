@@ -38,6 +38,12 @@ class RequestHandler extends RequestHandlerBase {
 		}
 	}
   
+	@RequestMapping(value=Array("count"), method = Array(RequestMethod.GET))
+	@ResponseBody
+	def count(@RequestParam(value="path_prefix",defaultValue="/") pathPrefix:String):Tuple1[Int] = {
+		Tuple1(queryForInt("select count(*) from files where path like ?", pathPrefix + "%")) 
+	}
+
 	// curl http://localhost:8080/oscar/file/ -d "path=hoge.doc" -d "atime=1000" -d "ctime=1000" -d "mtime=1000" -d "size=1024"
 	@RequestMapping(value=Array(""), method = Array(RequestMethod.POST))
 	@ResponseBody
@@ -57,6 +63,7 @@ class RequestHandler extends RequestHandlerBase {
 		update("delete from files where id=?", fileId) > 0
 	}
 	
+	// curl http://localhost:8080/oscar/file/0ae8aae04779093056a501782235c73306b3238b -H "Content-Type: text/plain" -d @.mysql_history
 	@RequestMapping(value=Array("{file_id}"), method = Array(RequestMethod.POST), consumes=Array("text/plain"))
 	@ResponseBody
 	def contents(@PathVariable("file_id") fileId:String, contents:InputStream):Result = {
