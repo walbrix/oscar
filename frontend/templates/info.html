@@ -1,0 +1,13 @@
+<div class="row">
+  <div class="col-sm-8 col-md-8">
+  <ol class="breadcrumb">
+    <li><a href="/"><span class="glyphicon glyphicon-folder-close"></span> トップ</a></li>
+      {% for path_element in path_elements %}
+        <li><a href="{{path_element}}"><span class="glyphicon glyphicon-folder-close"></span> {{path_element}} </a></li>
+      {% endfor %}
+  </ol>
+  </div>
+  <div class="col-sm-4 col-md-4">
+    配下{{count}}件のファイル
+  </div>
+</div>

@@ -10,6 +10,7 @@ try:
 except:
     pass
 
+base_dir="/var/www/localhost/htdocs"
 api_root="http://localhost:8080/oscar/"
 mysql_host="localhost"
 mysql_db="oscar"
