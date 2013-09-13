@@ -19,7 +19,7 @@ class IndexingRequestHandler extends RequestHandlerBase {
 	@ResponseBody
 	def get():Seq[IndexingRequest] =
 		queryForSeq("select * from indexing_queue where num_retry < 5 order by ifnull(updated_at,created_at)").map { row=>
-		  	(row("url_id"),row("url"),row("created_at"),row("updated_at"),row("num_retry")):IndexingRequest
+		  	(row("file_id"),row("path"),row("created_at"),row("updated_at"),row("num_retry")):IndexingRequest
 		}
 	@RequestMapping(value=Array(""), method = Array(RequestMethod.POST))
 	@ResponseBody
