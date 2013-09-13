@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RequestBody
 import java.io.InputStream
 import org.apache.commons.io.IOUtils
 
-case class File(id:String,path:String,atime:Timestamp,ctime:Timestamp,mtime:Timestamp,size:Long,updatedAt:Timestamp)
+case class File(id:String,path:String,filename:String,atime:Timestamp,ctime:Timestamp,mtime:Timestamp,size:Long,updatedAt:Timestamp)
 
 @Controller
 @RequestMapping(Array("file"))
@@ -25,16 +25,16 @@ class RequestHandler extends RequestHandlerBase {
 	implicit def long2timestamp(v:Long) = new Timestamp(v)
 	
 	implicit def row2file(row:Row):File =
-		File(row("id"), row("path"), row("atime"), row("ctime"), row("mtime"), row("size"),row("updated_at"))
+		File(row("id"), row("path"), row("filename"), row("atime"), row("ctime"), row("mtime"), row("size"),row("updated_at"))
 
 	@RequestMapping(value=Array(""), method = Array(RequestMethod.GET))
 	@ResponseBody
-	def get(@RequestParam(value="file_id_prefix",required=false) fileIdPrefix:String):Seq[(String,String)] = {
+	def get(@RequestParam(value="file_id_prefix",required=false) fileIdPrefix:String):Seq[(String,String,String)] = {
 		(fileIdPrefix match {
 		  case null => queryForSeq("select id,path from files")
 		  case _ => queryForSeq("select id,path from files where id like ?", fileIdPrefix + "%") 
 		}).map { row =>
-			(row("id"),row("path")):(String,String)
+			(row("id"),row("path"),row("name")):(String,String,String)
 		}
 	}
   
@@ -47,13 +47,14 @@ class RequestHandler extends RequestHandlerBase {
 	// curl http://localhost:8080/oscar/file/ -d "path=hoge.doc" -d "atime=1000" -d "ctime=1000" -d "mtime=1000" -d "size=1024"
 	@RequestMapping(value=Array(""), method = Array(RequestMethod.POST))
 	@ResponseBody
-	def post(path:String,atime:Long,ctime:Long,mtime:Long,size:Long):TypedResult[String] = {
-		update("insert into files(id,path,atime,ctime,mtime,size,updated_at) values(sha1(?),?,?,?,?,?,now()) " + 
+	def post(path:String,name:String,atime:Long,ctime:Long,mtime:Long,size:Long):TypedResult[String] = {
+		val fullPath =  path + "/" + name
+		update("insert into files(id,path,name,atime,ctime,mtime,size,updated_at) values(sha1(?),?,?,?,?,?,?,now()) " + 
 		    "on duplicate key update atime=?,ctime=?,mtime=?,size=?,updated_at=now()",
-		    path, path, atime:Timestamp, ctime:Timestamp, mtime:Timestamp, size,
+		    fullPath, path, name, atime:Timestamp, ctime:Timestamp, mtime:Timestamp, size,
 		    atime:Timestamp, ctime:Timestamp, mtime:Timestamp, size) match {
 		  case 0 => false
-		  case _ => TypedResult.success(queryForString("select sha1(?)", path))
+		  case _ => TypedResult.success(queryForString("select sha1(?)", fullPath))
 		}
 	}
 	
@@ -78,7 +79,7 @@ class RequestHandler extends RequestHandlerBase {
 	@ResponseBody
 	def search(q:String):(Int, Seq[FileWithSnippets]) = {
 		val wildq = "%" + q + "%"
-		(0, queryForSeq("select * from files where path like ? or contents like ?", wildq, wildq).map { row =>
+		(0, queryForSeq("select * from files where path like ? or name like ? or contents like ?", wildq, wildq, wildq).map { row =>
 		  	(row:File, "title snippet", "body snippet")
 		})
 	}

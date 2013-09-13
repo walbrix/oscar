@@ -1,14 +1,16 @@
 create table files (
 	id char(40) primary key,
 	path varchar(333) not null,
+	name text not null,
 	atime datetime not null,
 	ctime datetime not null,
 	mtime datetime not null,
 	size bigint not null,
 	updated_at datetime,
-	contents text,
+	contents longtext,
 	index(path),
 	fulltext key(path),
+	fulltext key(name),
 	fulltext key(contents)
 ) engine=mroonga;
 
