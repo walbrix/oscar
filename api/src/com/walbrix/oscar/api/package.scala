@@ -1,6 +1,13 @@
 package com.walbrix.oscar
 
+import java.io.InputStream
+import com.fasterxml.jackson.databind.JsonNode
 package object api {
+	// util
+	private val objectMapper = new com.fasterxml.jackson.databind.ObjectMapper() // supposed to be thread safe
+	def loadJSON(is:InputStream):JsonNode = objectMapper.readTree(is)
+	def parseJSON(s:String):JsonNode = objectMapper.readTree(s)
+  
 	// Base Service class
 	trait ServiceBase extends AnyRef
 		with com.walbrix.spring.DataSourceSupport 

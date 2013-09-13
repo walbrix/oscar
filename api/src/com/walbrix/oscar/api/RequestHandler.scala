@@ -48,7 +48,7 @@ class RequestHandler extends RequestHandlerBase {
 	@RequestMapping(value=Array(""), method = Array(RequestMethod.POST))
 	@ResponseBody
 	def post(path:String,name:String,atime:Long,ctime:Long,mtime:Long,size:Long):TypedResult[String] = {
-		val fullPath =  path + "/" + name
+		val fullPath =  path.last match  { case '/' => path + name case _ => path + "/" + name }
 		update("insert into files(id,path,name,atime,ctime,mtime,size,updated_at) values(sha1(?),?,?,?,?,?,?,now()) " + 
 		    "on duplicate key update atime=?,ctime=?,mtime=?,size=?,updated_at=now()",
 		    fullPath, path, name, atime:Timestamp, ctime:Timestamp, mtime:Timestamp, size,
