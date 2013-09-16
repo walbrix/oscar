@@ -25,7 +25,7 @@ class RequestHandler extends RequestHandlerBase {
 	implicit def long2timestamp(v:Long) = new Timestamp(v)
 	
 	implicit def row2file(row:Row):File =
-		File(row("id"), row("path"), row("filename"), row("atime"), row("ctime"), row("mtime"), row("size"),row("updated_at"))
+		File(row("id"), row("path"), row("name"), row("atime"), row("ctime"), row("mtime"), row("size"),row("updated_at"))
 
 	@RequestMapping(value=Array(""), method = Array(RequestMethod.GET))
 	@ResponseBody
