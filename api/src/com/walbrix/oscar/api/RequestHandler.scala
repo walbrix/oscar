@@ -29,6 +29,11 @@ class RequestHandler extends RequestHandlerBase {
 	implicit def row2file(row:Row):File =
 		File(row("id"), row("path"), row("name"), row("atime"), row("ctime"), row("mtime"), row("size"),row("updated_at"))
 
+	// <4096 == ""
+	// <65536 == "0"
+	// <1048576 == "00"
+	// <16777216 == "000"
+	// <268435456 == "0000"
 	@RequestMapping(value=Array(""), method = Array(RequestMethod.GET))
 	@ResponseBody
 	def get(@RequestParam(value="file_id_prefix",required=false) fileIdPrefix:String):Seq[(String,String,String)] = {
@@ -42,8 +47,8 @@ class RequestHandler extends RequestHandlerBase {
   
 	@RequestMapping(value=Array("count"), method = Array(RequestMethod.GET))
 	@ResponseBody
-	def count(@RequestParam(value="path_prefix",defaultValue="/") pathPrefix:String):Tuple1[Int] = {
-		Tuple1(queryForInt("select count(*) from files where path like ?", pathPrefix + "%")) 
+	def count(@RequestParam(value="path_prefix",defaultValue="/") pathPrefix:String):Tuple1[Long] = {
+		Tuple1(queryForLong("select count(*) from files where path=? or path like concat(?, '/%')", pathPrefix, pathPrefix)) 
 	}
 
 	// curl http://localhost:8080/oscar/file/ -d "path=hoge.doc" -d "atime=1000" -d "ctime=1000" -d "mtime=1000" -d "size=1024"
@@ -64,6 +69,12 @@ class RequestHandler extends RequestHandlerBase {
 	@ResponseBody
 	def delete(@PathVariable("file_id") fileId:String):(Boolean,Option[Any]) = {
 		update("delete from files where id=?", fileId) > 0
+	}
+	
+	@RequestMapping(value=Array("delete_by_path_prefix"), method=Array(RequestMethod.POST))
+	def deleteDir(@RequestParam pathPrefix:String):Result = {
+		if (pathPrefix == "" || pathPrefix == "/") throw new IllegalArgumentException()
+		update("delete from files where path=? or path like concat(?, '/%')", pathPrefix, pathPrefix) > 0
 	}
 	
 	// curl http://localhost:8080/oscar/file/0ae8aae04779093056a501782235c73306b3238b -H "Content-Type: text/plain" -d @.mysql_history
