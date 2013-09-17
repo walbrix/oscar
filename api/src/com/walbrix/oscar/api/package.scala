@@ -16,6 +16,9 @@ package object api {
 	trait RequestHandlerBase extends ServiceBase
 		with com.walbrix.spring.RestfulErrorSupport
 
+	// types
+	type FileWithSnippets = (File, Seq[String], Seq[String], Seq[String])
+
 	// Result types
 	type TypedResult[T] = (Boolean, Option[T])
 

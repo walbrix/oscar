@@ -1,5 +1,5 @@
 create table files (
-	id char(40) primary key,
+	id char(40) character set ascii,
 	path varchar(333) not null,
 	name text not null,
 	atime datetime not null,
@@ -9,6 +9,7 @@ create table files (
 	updated_at datetime,
 	contents longtext,
 	index(path),
+	primary key(id),
 	fulltext key(path),
 	fulltext key(name),
 	fulltext key(contents)

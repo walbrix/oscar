@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="src" path="test"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="con" path="org.scala-ide.sdt.launching.SCALA_CONTAINER"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
 	<classpathentry kind="lib" path="webapp/WEB-INF/lib/spring-web-3.2.4.RELEASE.jar"/>
 	<classpathentry kind="lib" path="webapp/WEB-INF/lib/spring-context-3.2.4.RELEASE.jar"/>
 	<classpathentry kind="lib" path="webapp/WEB-INF/lib/spring-tx-3.2.4.RELEASE.jar"/>
@@ -16,5 +18,11 @@
 	<classpathentry kind="lib" path="webapp/WEB-INF/lib/spring-core-3.2.4.RELEASE.jar"/>
 	<classpathentry kind="lib" path="lib/mysql-connector-java-5.1.26-bin.jar"/>
 	<classpathentry kind="lib" path="webapp/WEB-INF/lib/commons-io-2.4.jar"/>
+	<classpathentry kind="lib" path="lib/spring-test-3.2.4.RELEASE.jar"/>
+	<classpathentry kind="lib" path="webapp/WEB-INF/lib/spring-aop-3.2.4.RELEASE.jar"/>
+	<classpathentry kind="lib" path="webapp/WEB-INF/lib/aopalliance-1.0.jar"/>
+	<classpathentry kind="lib" path="webapp/WEB-INF/lib/spring-expression-3.2.4.RELEASE.jar"/>
+	<classpathentry kind="lib" path="webapp/WEB-INF/lib/aspectjrt.jar"/>
+	<classpathentry kind="lib" path="webapp/WEB-INF/lib/aspectjweaver.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

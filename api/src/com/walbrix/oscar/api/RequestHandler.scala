@@ -14,14 +14,16 @@ import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestBody
 import java.io.InputStream
 import org.apache.commons.io.IOUtils
+import org.springframework.beans.factory.annotation.Autowired
 
-case class File(id:String,path:String,filename:String,atime:Timestamp,ctime:Timestamp,mtime:Timestamp,size:Long,updatedAt:Timestamp)
+case class File(id:String,path:String,name:String,atime:Timestamp,ctime:Timestamp,mtime:Timestamp,size:Long,updatedAt:Timestamp)
 
 @Controller
 @RequestMapping(Array("file"))
 @Transactional
 class RequestHandler extends RequestHandlerBase {
-  
+  	@Autowired private var searchService:GroongaFileSearchService = _
+
 	implicit def long2timestamp(v:Long) = new Timestamp(v)
 	
 	implicit def row2file(row:Row):File =
@@ -74,13 +76,15 @@ class RequestHandler extends RequestHandlerBase {
 	  // http://static.springsource.org/spring/docs/current/javadoc-api/org/springframework/jdbc/core/support/SqlLobValue.html#SqlLobValue(java.io.Reader,%20int)
 	}
 
-	type FileWithSnippets = (File, String, String)
 	@RequestMapping(value=Array("search"), method = Array(RequestMethod.GET))
 	@ResponseBody
-	def search(q:String):(Int, Seq[FileWithSnippets]) = {
+	def search(@RequestParam("q") q:String, @RequestParam(value="offset",defaultValue="0") offset:Int,
+	    @RequestParam(value="limit",defaultValue="10") limit:Int):(Int, Seq[FileWithSnippets]) = {
+		searchService.search(q, offset, limit)
+		/*
 		val wildq = "%" + q + "%"
 		(0, queryForSeq("select * from files where path like ? or name like ? or contents like ?", wildq, wildq, wildq).map { row =>
 		  	(row:File, "title snippet", "body snippet")
-		})
+		})*/
 	}
 }

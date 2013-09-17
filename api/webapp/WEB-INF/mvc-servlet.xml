@@ -28,6 +28,17 @@
         </mvc:message-converters>
     </mvc:annotation-driven>
 
-    <import resource="beans.xml"/>
+	<bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+		<property name="locations">
+			<list>
+			    <value>classpath:settings.xml</value>
+				<value>file:settings.xml</value>
+				<value>file:settings-${user.name}.xml</value>
+			</list>
+		</property>
+		<property name="ignoreResourceNotFound" value="true" />
+	</bean>
+    
+    <import resource="classpath:beans.xml"/>
   	
 </beans>
