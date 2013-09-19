@@ -12,11 +12,12 @@ class GroongaFileSearchService extends ServiceBase {
 		  queryForSingleRow("select mroonga_escape(?) as share_id,mroonga_escape(?) as path,mroonga_escape(?) as query", shareId, pathPrefix, q).map { row =>
 		  	(row("share_id"), row("path"), row("query")):(String,String,String)
 		}.get
-        val cmd = "select files --match_columns path,name,contents " +
+        val cmd = ("select files --match_columns path,name,contents " +
           "--output_columns 'id,path,name,atime,ctime,mtime,size,updated_at,snippet_html(path),snippet_html(name),snippet_html(contents)' " + 
           "--command_version 2 --sortby _score --offset %d --limit %d " +
           "--filter 'share_id == \"%s\" && (path == \"%s\"|| path @^ \"%s\")' " +
-          "--query '%s'".format(offset, limit, escapedShareId, escapedPath, escapedPath + "/", escapedQuery)
+          "--query '%s'").format(offset, limit, escapedShareId, escapedPath, escapedPath + "/", escapedQuery)
+        println(cmd)
         val json = parseJSON(queryForSingleRow("select mroonga_command(?) as json", cmd).headOption.map(_("json"):String).get)
         println(json)
         val results = json.get(0).iterator().drop(2).map { row =>

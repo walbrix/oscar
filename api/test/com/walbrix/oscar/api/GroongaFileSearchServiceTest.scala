@@ -16,6 +16,6 @@ class GroongaFileSearchServiceTest {
 	@Autowired private var svc:GroongaFileSearchService = _
 	
 	@Test def testSearch() = {
-		println(svc.search("share", "/", "ビッド", 0, 10))
+		println(svc.search("share", "/", "参照", 0, 10))
 	}
 }
