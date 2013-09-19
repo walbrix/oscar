@@ -36,6 +36,6 @@ class IndexingRequestHandler extends RequestHandlerBase {
 	@RequestMapping(value=Array("{share_id}/{file_id}/fail"), method = Array(RequestMethod.POST))
 	@ResponseBody
 	def fail(@PathVariable("share_id") shareId:String,@PathVariable("file_id") fileId:String):Result = {
-	  update("update indexing_queue set updated_at=now(),num_retry=num_retry+1 where file_id=?", shareId, fileId) > 0
+	  update("update indexing_queue set updated_at=now(),num_retry=num_retry+1 where share_id=? and file_id=?", shareId, fileId) > 0
 	}
 }
