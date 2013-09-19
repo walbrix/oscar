@@ -24,7 +24,7 @@ class IndexingRequestHandler extends RequestHandlerBase {
 	@RequestMapping(value=Array("{share_id}"), method = Array(RequestMethod.POST))
 	@ResponseBody
 	def post(@PathVariable("share_id") shareId:String,@RequestParam("path") path:String):TypedResult[String] = {
-	  update("insert into indexing_queue(share_id, file_id,path,created_at) values(?, sha1(?),?,now()) on duplicate key update updated_at=now()", shareId, path, path) > 0
+	  update("insert into indexing_queue(share_id, file_id,path,created_at) values(?, sha1(?),?,now()) on duplicate key update updated_at=now(),num_retry=0", shareId, path, path) > 0
 	}
 	
 	@RequestMapping(value=Array("{share_id}/{file_id}"), method = Array(RequestMethod.DELETE))
