@@ -24,9 +24,9 @@ case class File(id:String,path:String,name:String,atime:Timestamp,ctime:Timestam
 class RequestHandler extends RequestHandlerBase {
   	@Autowired private var searchService:GroongaFileSearchService = _
 
-	implicit def long2timestamp(v:Long) = new Timestamp(v)
+	implicit private def long2timestamp(v:Long) = new Timestamp(v)
 	
-	implicit def row2file(row:Row):File =
+	implicit private def row2file(row:Row):File =
 		File(row("id"), row("path"), row("name"), row("atime"), row("ctime"), row("mtime"), row("size"),row("updated_at"))
 
 	// <4096 == ""
@@ -48,7 +48,8 @@ class RequestHandler extends RequestHandlerBase {
 	@RequestMapping(value=Array("{share_id}/count"), method = Array(RequestMethod.GET))
 	@ResponseBody
 	def count(@PathVariable("share_id") shareId:String,@RequestParam(value="path_prefix",defaultValue="/") pathPrefix:String):Tuple1[Long] = {
-		Tuple1(queryForLong("select count(*) from files where share_id=? and path=? or path like concat(?, '/%')", shareId, pathPrefix, pathPrefix)) 
+		Tuple1(queryForLong("select count(*) from files where share_id=? and path=? or path like ?",
+		    shareId, pathPrefix, joinPathElements(pathPrefix, "%"))) 
 	}
 
 	// curl http://localhost:8080/oscar/file/ -d "path=hoge.doc" -d "atime=1000" -d "ctime=1000" -d "mtime=1000" -d "size=1024"
@@ -74,7 +75,7 @@ class RequestHandler extends RequestHandlerBase {
 	@RequestMapping(value=Array("{share_id}/delete_by_path_prefix"), method=Array(RequestMethod.POST))
 	def deleteDir(@PathVariable("share_id") shareId:String,@RequestParam("path_prefix") pathPrefix:String):Result = {
 		if (pathPrefix == "" || pathPrefix == "/") throw new IllegalArgumentException()
-		update("delete from files where share_id=? and (path=? or path like concat(?, '/%'))", shareId, pathPrefix, pathPrefix) > 0
+		update("delete from files where share_id=? and (path=? or path like ?)", shareId, pathPrefix, joinPathElements(pathPrefix, "%")) > 0
 	}
 	
 	// curl http://localhost:8080/oscar/file/0ae8aae04779093056a501782235c73306b3238b -H "Content-Type: text/plain" -d @.mysql_history
@@ -93,8 +94,8 @@ class RequestHandler extends RequestHandlerBase {
 	    @RequestParam(value="offset",defaultValue="0") offset:Int,
 	    @RequestParam(value="limit",defaultValue="10") limit:Int):Seq[File] = {
 		queryForSeq("select id,path,name,atime,ctime,mtime,size,updated_at from files where " + 
-		    "path=? or path like concat(?, '/%') " + 
-		    "order by mtime desc limit ?,?", pathPrefix, pathPrefix, offset, limit).map { row =>
+		    "path=? or path like ? " + 
+		    "order by mtime desc limit ?,?", pathPrefix, joinPathElements(pathPrefix, "%"), offset, limit).map { row =>
 		  	row:File
 		}
 	}

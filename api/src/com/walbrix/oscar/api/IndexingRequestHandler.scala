@@ -32,6 +32,14 @@ class IndexingRequestHandler extends RequestHandlerBase {
 	def success(@PathVariable("share_id") shareId:String,@PathVariable("file_id") fileId:String):Result = {
 	  update("delete from indexing_queue where share_id=? and file_id=?", shareId, fileId) > 0
 	}
+	
+	@RequestMapping(value=Array("{share_id}/delete_by_path_prefix"), method=Array(RequestMethod.POST))
+	def deleteDir(@PathVariable("share_id") shareId:String,@RequestParam("path_prefix") pathPrefix:String):Result = {
+		if (pathPrefix == "" || pathPrefix == "/") throw new IllegalArgumentException()
+		update("delete from indexing_queue where share_id=? and path like ?", shareId, 
+		    joinPathElements(pathPrefix, "%")) > 0
+	}
+
 
 	@RequestMapping(value=Array("{share_id}/{file_id}/fail"), method = Array(RequestMethod.POST))
 	@ResponseBody

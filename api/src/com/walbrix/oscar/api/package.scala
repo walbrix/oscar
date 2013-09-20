@@ -43,4 +43,11 @@ package object api {
 	
 	implicit def result2boolean[T](result:TypedResult[T]) = result._1
 	implicit def boolean2result[T](bool:Boolean) = TypedResult[T](bool)
+
+	// utils
+	def joinPathElements(a:String,b:String):String = {
+  		if (a.endsWith("/") && b.startsWith("/")) return a + b.substring(1)
+  		if (!a.endsWith("/") && !b.startsWith("/")) return a + "/" + b
+  		return a + b
+  	}
 }
