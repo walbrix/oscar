@@ -33,6 +33,6 @@ class GroongaFileSearchService extends ServiceBase {
         		row.get(10).iterator().map(_.asText).toSeq
         	)
         }.toSeq
-        (0,results)
+        (json.get(0).get(0).get(0).asInt(),results)
 	}
 }
