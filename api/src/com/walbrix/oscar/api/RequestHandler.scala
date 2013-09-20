@@ -86,11 +86,23 @@ class RequestHandler extends RequestHandlerBase {
 	  // http://static.springsource.org/spring/docs/3.0.x/javadoc-api/org/springframework/web/bind/annotation/RequestHeader.html
 	  // http://static.springsource.org/spring/docs/current/javadoc-api/org/springframework/jdbc/core/support/SqlLobValue.html#SqlLobValue(java.io.Reader,%20int)
 	}
+	
+	@RequestMapping(value=Array("{share_id}/recent"), method = Array(RequestMethod.GET))
+	@ResponseBody
+	def recent(@RequestParam(value="path_prefix",defaultValue="/") pathPrefix:String,
+	    @RequestParam(value="offset",defaultValue="0") offset:Int,
+	    @RequestParam(value="limit",defaultValue="10") limit:Int):Seq[File] = {
+		queryForSeq("select id,path,name,atime,ctime,mtime,size,updated_at from files where " + 
+		    "path=? or path like concat(?, '/%') " + 
+		    "order by mtime desc limit ?,?", pathPrefix, pathPrefix, offset, limit).map { row =>
+		  	row:File
+		}
+	}
 
 	@RequestMapping(value=Array("{share_id}/search"), method = Array(RequestMethod.GET))
 	@ResponseBody
 	def search(@PathVariable("share_id") shareId:String,
-	    @RequestParam("q") q:String, @RequestParam("path_prefix") pathPrefix:String,
+	    @RequestParam("q") q:String, @RequestParam(value="path_prefix",defaultValue="/") pathPrefix:String,
 	    @RequestParam(value="offset",defaultValue="0") offset:Int,
 	    @RequestParam(value="limit",defaultValue="10") limit:Int):(Int, Seq[FileWithSnippets]) = {
 		searchService.search(shareId, pathPrefix, q, offset, limit)
