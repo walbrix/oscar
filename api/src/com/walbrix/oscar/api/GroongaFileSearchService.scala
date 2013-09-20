@@ -16,7 +16,7 @@ class GroongaFileSearchService extends ServiceBase {
           "--output_columns 'id,path,name,atime,ctime,mtime,size,updated_at,snippet_html(path),snippet_html(name),snippet_html(contents)' " + 
           "--command_version 2 --sortby _score --offset %d --limit %d " +
           "--filter 'share_id == \"%s\" && (path == \"%s\"|| path @^ \"%s\")' " +
-          "--query '%s'").format(offset, limit, escapedShareId, escapedPath, escapedPath + "/", escapedQuery)
+          "--query '%s'").format(offset, limit, escapedShareId, escapedPath, joinPathElements(escapedPath, ""), escapedQuery)
         println(cmd)
         val json = parseJSON(queryForSingleRow("select mroonga_command(?) as json", cmd).headOption.map(_("json"):String).get)
         println(json)
