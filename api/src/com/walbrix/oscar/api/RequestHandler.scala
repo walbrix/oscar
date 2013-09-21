@@ -85,7 +85,7 @@ class RequestHandler extends RequestHandlerBase {
 		update("delete from files where share_id=? and id=?", shareId, fileId) > 0
 	}
 	
-	@RequestMapping(value=Array("{share_id}/delete_by_path_prefix"), method=Array(RequestMethod.POST))
+	@RequestMapping(value=Array("{share_id}"), method=Array(RequestMethod.DELETE))
 	def deleteDir(@PathVariable("share_id") shareId:String,@RequestParam("path_prefix") pathPrefix:String):Result = {
 		if (pathPrefix == "" || pathPrefix == "/") throw new IllegalArgumentException()
 		update("delete from files where share_id=? and (path=? or path like ?)", shareId, pathPrefix, joinPathElements(pathPrefix, "%")) > 0
