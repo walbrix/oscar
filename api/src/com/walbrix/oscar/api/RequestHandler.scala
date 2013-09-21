@@ -40,8 +40,8 @@ class RequestHandler extends RequestHandlerBase {
 	@ResponseBody
 	def get(@PathVariable("share_id") shareId:String, @RequestParam(value="file_id_prefix",required=false) fileIdPrefix:String):Seq[(String,String,String)] = {
 		(fileIdPrefix match {
-		  case null => queryForSeq("select id,path from files where share_id=?", shareId)
-		  case _ => queryForSeq("select id,path from files where share_id=? and id like ?", shareId, fileIdPrefix + "%") 
+		  case null => queryForSeq("select id,path,name from files where share_id=?", shareId)
+		  case _ => queryForSeq("select id,path,name from files where share_id=? and id like ?", shareId, fileIdPrefix + "%") 
 		}).map { row =>
 			(row("id"),row("path"),row("name")):(String,String,String)
 		}

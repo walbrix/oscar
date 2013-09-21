@@ -14,7 +14,7 @@ create table files (
 	fulltext key(path) COMMENT 'parser "TokenBigramSplitSymbolAlphaDigit"',
 	index(path),
 	index(sha1sum),
-	fulltext key(name),
+	fulltext key(name) COMMENT 'parser "TokenBigramSplitSymbolAlphaDigit"',
 	fulltext key(contents)
 ) engine=mroonga;
 
