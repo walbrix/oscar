@@ -9,9 +9,9 @@ create table files (
 	size bigint not null,
 	updated_at datetime,
 	contents longtext,
-	index(path),
 	primary key(share_id,id),
-	fulltext key(path),
+	fulltext key(path) COMMENT 'parser "TokenBigramSplitSymbolAlphaDigit"',
+	index(path),
 	fulltext key(name),
 	fulltext key(contents)
 ) engine=mroonga;
