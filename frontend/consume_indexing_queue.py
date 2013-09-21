@@ -1,5 +1,6 @@
 #!/usr/bin/python2.7
 # -*- coding: utf-8 -*-
+import sys
 import os
 import re
 import subprocess
@@ -66,5 +67,10 @@ def run():
             print oscar.post("/indexing/%s/%s/fail" % (share_id,file_id), {})
         
 if __name__ == '__main__':
-    with oscar.JobLock("indexing.lock") as l:
-        if l: run()
+    if len(sys.argv) < 2:
+        with oscar.JobLock("indexing.lock") as l:
+            if l: run()
+    else:
+        for file in sys.argv[1:]:
+            print "Extracting %s..." % file
+            print extract(file)
