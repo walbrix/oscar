@@ -129,7 +129,7 @@ class RequestHandler extends RequestHandlerBase {
 		    "group by sha1sum having count(sha1sum) > 1 order by cnt desc limit ?", shareId, limit).map { row=>
 		    row("sha1sum"):String
 		}
-		if (dups.size == 0) return Seq(Seq())
+		if (dups.size == 0) return Seq()
 		val dupsCond = dups.map("'" + _ + "'").mkString(",")
 		val dupedFiles = scala.collection.mutable.Map[String,Seq[File]]()
 		queryForSeq("select id,path,name,atime,ctime,mtime,size,updated_at,sha1sum from files where share_id=? and sha1sum in (%s)".format(dupsCond), shareId).foreach { row =>
@@ -138,7 +138,7 @@ class RequestHandler extends RequestHandlerBase {
 		}
 		dups.map { sha1sum =>
 			dupedFiles.getOrElse(sha1sum, Seq())
-		}.filter(_.size > 0)
+		}
 	}
 
 	@RequestMapping(value=Array("{share_id}/search"), method = Array(RequestMethod.GET))
