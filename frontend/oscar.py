@@ -5,12 +5,13 @@ import urllib
 import urllib2
 import httplib2
 import json
+import ConfigParser
 try:
     import MySQLdb
 except:
     pass
 
-base_dir="/var/www/localhost/htdocs"
+smb_conf = "/etc/samba/smb.conf"
 api_root="http://localhost:8080/oscar/"
 mysql_host="localhost"
 mysql_db="oscar"
@@ -73,3 +74,42 @@ def delete(func, params={}):
 
 def connect_mysql():
     return MySQLdb.connect(host=mysql_host,db=mysql_db,user=mysql_user,passwd=mysql_password)
+
+class JobLock():
+    def __init__(self, lock_name, timeout=30):
+        self.lock_name = lock_name
+        self.timeout = timeout
+    def __enter__(self):
+        self.conn = MySQLdb.connect(host=mysql_host,db=mysql_db,user=mysql_user,passwd=mysql_password)
+        self.cur = self.conn.cursor()
+        self.cur.execute("select get_lock(%s,%s)", (self.lock_name,self.timeout))
+        return self.cur.fetchone()[0] == 1
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.cur.close()
+        self.conn.close()
+        if exc_type: return False
+        return True
+
+def _get_smb_conf_parser():
+    parser = ConfigParser.SafeConfigParser({"guest ok":"no"})
+    parser.read(smb_conf)
+    return parser
+
+def _get_share(parser, share_id):
+    if not parser.has_section(share_id): return None
+    path = parser.get(share_id, "path")
+    guest_ok = parser.getboolean(share_id, "guest ok")
+    comment = (parser.get(share_id, "comment") if parser.has_option(share_id, "comment") else ("共有フォルダ" if guest_ok else "アクセス制限された共有フォルダ")).decode("utf-8")
+    return (share_id, path, guest_ok,comment)
+
+def get_share(share_id):
+    parser = _get_smb_conf_parser()
+    return _get_share(parser, share_id)
+
+def get_share_list():
+    parser = _get_smb_conf_parser()
+    share_list = []
+    for section in filter(lambda x:x not in ["global","homes","printers"], parser.sections()):
+        share_list.append(_get_share(parser,section))
+    return share_list
+
