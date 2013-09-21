@@ -59,7 +59,7 @@ class RequestHandler extends RequestHandlerBase {
 	def count(@PathVariable("share_id") shareId:String,
 	    @RequestParam(value="path_prefix",defaultValue="/") pathPrefix:String,
 	    @RequestParam(value="limit",defaultValue="100") limit:Int):Seq[(String,String,String)] = {
-		queryForSeq("select id,path,name from files where share_id=? and (path=? or path like ?) and sha1sum='' limit ?",
+		queryForSeq("select id,path,name from files where share_id=? and (path=? or path like ?) and sha1sum='XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX' limit ?",
 		    shareId, pathPrefix, joinPathElements(pathPrefix, "%"), limit).map { row=>
 		    (row("id"),row("path"),row("name")):(String,String,String)
 		}
@@ -70,8 +70,8 @@ class RequestHandler extends RequestHandlerBase {
 	@ResponseBody
 	def post(@PathVariable("share_id") shareId:String,path:String,name:String,atime:Long,ctime:Long,mtime:Long,size:Long):TypedResult[String] = {
 		val fullPath =  path.last match  { case '/' => path + name case _ => path + "/" + name }
-		update("insert into files(share_id,id,path,name,atime,ctime,mtime,size,updated_at) values(?,sha1(?),?,?,?,?,?,?,now()) " + 
-		    "on duplicate key update atime=?,ctime=?,mtime=?,size=?,updated_at=now(),sha1sum=''",
+		update("insert into files(share_id,id,path,name,atime,ctime,mtime,size,sha1sum,updated_at) values(?,sha1(?),?,?,?,?,?,?,'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX',now()) " + 
+		    "on duplicate key update atime=?,ctime=?,mtime=?,size=?,updated_at=now(),sha1sum='XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'",
 		    shareId, fullPath, path, name, atime:Timestamp, ctime:Timestamp, mtime:Timestamp, size,
 		    atime:Timestamp, ctime:Timestamp, mtime:Timestamp, size) match {
 		  case 0 => false

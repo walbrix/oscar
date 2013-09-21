@@ -9,7 +9,7 @@ create table files (
 	size bigint not null,
 	updated_at datetime,
 	contents longtext,
-	sha1sum varchar(40) character set ascii,
+	sha1sum char(40) character set ascii default 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX',
 	primary key(share_id,id),
 	fulltext key(path) COMMENT 'parser "TokenBigramSplitSymbolAlphaDigit"',
 	index(path),
