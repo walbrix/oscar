@@ -16,7 +16,8 @@ import java.io.InputStream
 import org.apache.commons.io.IOUtils
 import org.springframework.beans.factory.annotation.Autowired
 
-case class File(id:String,path:String,name:String,atime:Timestamp,ctime:Timestamp,mtime:Timestamp,size:Long,updatedAt:Timestamp)
+case class File(id:String,path:String,name:String,
+    atime:Timestamp,ctime:Timestamp,mtime:Timestamp,size:Long,sha1sum:String,updatedAt:Timestamp)
 
 @Controller
 @RequestMapping(Array("file"))
@@ -27,7 +28,8 @@ class RequestHandler extends RequestHandlerBase {
 	implicit private def long2timestamp(v:Long) = new Timestamp(v)
 	
 	implicit private def row2file(row:Row):File =
-		File(row("id"), row("path"), row("name"), row("atime"), row("ctime"), row("mtime"), row("size"),row("updated_at"))
+		File(row("id"), row("path"), row("name"), 
+		    row("atime"), row("ctime"), row("mtime"), row("size"),row("sha1sum"),row("updated_at"))
 
 	// <4096 == ""
 	// <65536 == "0"
@@ -48,8 +50,19 @@ class RequestHandler extends RequestHandlerBase {
 	@RequestMapping(value=Array("{share_id}/count"), method = Array(RequestMethod.GET))
 	@ResponseBody
 	def count(@PathVariable("share_id") shareId:String,@RequestParam(value="path_prefix",defaultValue="/") pathPrefix:String):Tuple1[Long] = {
-		Tuple1(queryForLong("select count(*) from files where share_id=? and path=? or path like ?",
+		Tuple1(queryForLong("select count(*) from files where share_id=? and (path=? or path like ?)",
 		    shareId, pathPrefix, joinPathElements(pathPrefix, "%"))) 
+	}
+
+	@RequestMapping(value=Array("{share_id}/nosum"), method = Array(RequestMethod.GET))
+	@ResponseBody
+	def count(@PathVariable("share_id") shareId:String,
+	    @RequestParam(value="path_prefix",defaultValue="/") pathPrefix:String,
+	    @RequestParam(value="limit",defaultValue="100") limit:Int):Seq[(String,String,String)] = {
+		queryForSeq("select id,path,name from files where share_id=? and (path=? or path like ?) and sha1sum='' limit ?",
+		    shareId, pathPrefix, joinPathElements(pathPrefix, "%"), limit).map { row=>
+		    (row("id"),row("path"),row("name")):(String,String,String)
+		}
 	}
 
 	// curl http://localhost:8080/oscar/file/ -d "path=hoge.doc" -d "atime=1000" -d "ctime=1000" -d "mtime=1000" -d "size=1024"
@@ -58,7 +71,7 @@ class RequestHandler extends RequestHandlerBase {
 	def post(@PathVariable("share_id") shareId:String,path:String,name:String,atime:Long,ctime:Long,mtime:Long,size:Long):TypedResult[String] = {
 		val fullPath =  path.last match  { case '/' => path + name case _ => path + "/" + name }
 		update("insert into files(share_id,id,path,name,atime,ctime,mtime,size,updated_at) values(?,sha1(?),?,?,?,?,?,?,now()) " + 
-		    "on duplicate key update atime=?,ctime=?,mtime=?,size=?,updated_at=now()",
+		    "on duplicate key update atime=?,ctime=?,mtime=?,size=?,updated_at=now(),sha1sum=''",
 		    shareId, fullPath, path, name, atime:Timestamp, ctime:Timestamp, mtime:Timestamp, size,
 		    atime:Timestamp, ctime:Timestamp, mtime:Timestamp, size) match {
 		  case 0 => false
@@ -79,7 +92,7 @@ class RequestHandler extends RequestHandlerBase {
 	}
 	
 	// curl http://localhost:8080/oscar/file/0ae8aae04779093056a501782235c73306b3238b -H "Content-Type: text/plain" -d @.mysql_history
-	@RequestMapping(value=Array("{share_id}/{file_id}"), method = Array(RequestMethod.POST), consumes=Array("text/plain"))
+	@RequestMapping(value=Array("{share_id}/{file_id}/contents"), method = Array(RequestMethod.POST), consumes=Array("text/plain"))
 	@ResponseBody
 	def contents(@PathVariable("share_id") shareId:String,@PathVariable("file_id") fileId:String, contents:InputStream):Result = {
 		
@@ -87,7 +100,13 @@ class RequestHandler extends RequestHandlerBase {
 	  // http://static.springsource.org/spring/docs/3.0.x/javadoc-api/org/springframework/web/bind/annotation/RequestHeader.html
 	  // http://static.springsource.org/spring/docs/current/javadoc-api/org/springframework/jdbc/core/support/SqlLobValue.html#SqlLobValue(java.io.Reader,%20int)
 	}
-	
+
+	@RequestMapping(value=Array("{share_id}/{file_id}/sha1sum"), method = Array(RequestMethod.POST))
+	@ResponseBody
+	def contents(@PathVariable("share_id") shareId:String,@PathVariable("file_id") fileId:String, sha1sum:String):Result = {
+		update("update files set sha1sum=? where share_id=? and id=?", sha1sum, shareId, fileId) > 0
+	}
+
 	@RequestMapping(value=Array("{share_id}/recent"), method = Array(RequestMethod.GET))
 	@ResponseBody
 	def recent(@RequestParam(value="path_prefix",defaultValue="/") pathPrefix:String,
