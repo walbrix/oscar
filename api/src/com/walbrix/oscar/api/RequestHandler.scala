@@ -138,7 +138,7 @@ class RequestHandler extends RequestHandlerBase {
 		}
 		dups.map { sha1sum =>
 			dupedFiles.getOrElse(sha1sum, Seq())
-		}
+		}.filter(_.size > 0)
 	}
 
 	@RequestMapping(value=Array("{share_id}/search"), method = Array(RequestMethod.GET))
