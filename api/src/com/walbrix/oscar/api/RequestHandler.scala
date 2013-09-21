@@ -109,13 +109,35 @@ class RequestHandler extends RequestHandlerBase {
 
 	@RequestMapping(value=Array("{share_id}/recent"), method = Array(RequestMethod.GET))
 	@ResponseBody
-	def recent(@RequestParam(value="path_prefix",defaultValue="/") pathPrefix:String,
+	def recent(@PathVariable("share_id") shareId:String,
+	    @RequestParam(value="path_prefix",defaultValue="/") pathPrefix:String,
 	    @RequestParam(value="offset",defaultValue="0") offset:Int,
 	    @RequestParam(value="limit",defaultValue="10") limit:Int):Seq[File] = {
-		queryForSeq("select id,path,name,atime,ctime,mtime,size,updated_at from files where " + 
-		    "path=? or path like ? " + 
-		    "order by mtime desc limit ?,?", pathPrefix, joinPathElements(pathPrefix, "%"), offset, limit).map { row =>
+		queryForSeq("select id,path,name,atime,ctime,mtime,size,updated_at,sha1sum from files where " + 
+		    "share_id=? and (path=? or path like ?) " + 
+		    "order by mtime desc limit ?,?", shareId, pathPrefix, joinPathElements(pathPrefix, "%"), offset, limit).map { row =>
 		  	row:File
+		}
+	}
+	
+	@RequestMapping(value=Array("{share_id}/dups"), method=Array(RequestMethod.GET))
+	@ResponseBody
+	def dups(@PathVariable("share_id") shareId:String,
+	    @RequestParam(value="limit",defaultValue="100") limit:Int):Seq[Seq[File]] = {
+		val dups = queryForSeq("select sha1sum,count(sha1sum) as cnt from files where share_id=? " + 
+		    "and sha1sum not in ('XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX','ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ') " + 
+		    "group by sha1sum having count(sha1sum) > 1 order by cnt desc limit ?", shareId, limit).map { row=>
+		    row("sha1sum"):String
+		}
+		if (dups.size == 0) return Seq(Seq())
+		val dupsCond = dups.map("'" + _ + "'").mkString(",")
+		val dupedFiles = scala.collection.mutable.Map[String,Seq[File]]()
+		queryForSeq("select id,path,name,atime,ctime,mtime,size,updated_at,sha1sum from files where share_id=? and sha1sum in (%s)".format(dupsCond), shareId).foreach { row =>
+		  	val file:File = row
+		  	dupedFiles.put(file.sha1sum, dupedFiles.getOrElse(file.sha1sum, Seq()) :+ file)
+		}
+		dups.map { sha1sum =>
+			dupedFiles.getOrElse(sha1sum, Seq())
 		}
 	}
 

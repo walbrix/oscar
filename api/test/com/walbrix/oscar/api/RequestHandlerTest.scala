@@ -16,6 +16,10 @@ class RequestHandlerTest {
 	@Autowired private var requestHandler:RequestHandler = _
 	
 	@Test def testRecent() = {
-		println(requestHandler.recent("", 0, 10))
+		println(requestHandler.recent("share", "", 0, 10))
+	}
+	
+	@Test def testDups() = {
+		println(requestHandler.dups("share", 100))
 	}
 }
