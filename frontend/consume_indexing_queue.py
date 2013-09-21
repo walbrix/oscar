@@ -5,6 +5,7 @@ import re
 import subprocess
 import hashlib
 import argparse
+import nkf
 import oscar
 
 class IndexingFailureException(Exception):
@@ -22,6 +23,12 @@ def unoconv(os_pathname):
     if lynx.wait() != 0: raise IndexingFailureException(stderrdata)
     return text
 
+def pdftotext(os_pathname):
+    pt = subprocess.Popen(["/usr/bin/pdftotext",os_pathname, "-"], shell=False,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+    text, stderrdata = pt.communicate()
+    if pt.wait() != 0: raise IndexingFailureException(stderrdata)
+    return nkf.nkf("-w", text)
+
 def extract(fullpath):
     extractor_funcs = {
         ".xls":unoconv,
@@ -30,7 +37,7 @@ def extract(fullpath):
         ".docx":unoconv,
         ".ppt":unoconv,
         ".pptx":unoconv,
-        ".pdf":unoconv
+        ".pdf":pdftotext
     }
 
     extractor_func = None
