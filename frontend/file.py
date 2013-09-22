@@ -15,8 +15,9 @@ def register_file(filename):
     stat = os.stat(os_pathname)
 
     pathname = os_pathname[len(oscar.base_dir):]
+    path, name = os.path.split(pathname)
 
-    data = {"path":pathname,"atime":int(stat.st_atime * 1000),"ctime":int(stat.st_ctime * 1000),"mtime":int(stat.st_mtime * 1000),"size":int(stat.st_size)}
+    data = {"path":path,"name":name,"atime":int(stat.st_atime * 1000),"ctime":int(stat.st_ctime * 1000),"mtime":int(stat.st_mtime * 1000),"size":int(stat.st_size)}
     print oscar.post("/file/", data)
 
     indexeable_suffixes = [".doc",".docx",".xls", ".xlsx", ".ppt", ".pptx", ".pdf", ".txt", ".html", ".htm", ".xhtml"]
