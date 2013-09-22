@@ -17,10 +17,18 @@ class IndexingRequestHandler extends RequestHandlerBase {
 	type IndexingRequest = (String,String,String, Timestamp, Option[Timestamp], Long)
 	@RequestMapping(value=Array(""), method = Array(RequestMethod.GET))
 	@ResponseBody
-	def get():Seq[IndexingRequest] =
-		queryForSeq("select * from indexing_queue where num_retry < 5 order by ifnull(updated_at,created_at)").map { row=>
+	def get(@RequestParam(value="limit",defaultValue="5000") limit:Int):Seq[IndexingRequest] =
+		queryForSeq("select * from indexing_queue where num_retry < 5 order by ifnull(updated_at,created_at) limit ?", limit).map { row=>
 		  	(row("share_id"), row("file_id"),row("path"),row("created_at"),row("updated_at"),row("num_retry")):IndexingRequest
 		}
+
+	@RequestMapping(value=Array(""), method = Array(RequestMethod.GET))
+	@ResponseBody
+	def getFailed(@RequestParam(value="limit",defaultValue="100") limit:Int):Seq[IndexingRequest] =
+		queryForSeq("select * from indexing_queue where num_retry > 0 order by ifnull(updated_at,created_at) desc limit ?", limit).map { row=>
+		  	(row("share_id"), row("file_id"),row("path"),row("created_at"),row("updated_at"),row("num_retry")):IndexingRequest
+		}
+
 	@RequestMapping(value=Array("{share_id}"), method = Array(RequestMethod.POST))
 	@ResponseBody
 	def post(@PathVariable("share_id") shareId:String,@RequestParam("path") path:String):TypedResult[String] = {

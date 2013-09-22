@@ -2,11 +2,16 @@ package com.walbrix.oscar.api
 import scala.collection.JavaConversions._
 import org.springframework.stereotype.Component
 import java.sql.Timestamp
+import java.sql.SQLException
 
 @Component
 class GroongaFileSearchService extends ServiceBase {
 	implicit private def double2timestamp(v:Double) = new Timestamp((v * 1000).longValue)
 
+	private def actualSearch(cmd:String):String = {
+		queryForSingleRow("select mroonga_command(?) as json", cmd).headOption.map(_("json"):String).get
+	}
+	
 	def search(shareId:String, pathPrefix:String, q:String, offset:Int, limit:Int):(Int, Seq[FileWithSnippets]) = {
 		val (escapedShareId,escapedPath, escapedQuery) = 
 		  queryForSingleRow("select mroonga_escape(?) as share_id,mroonga_escape(?) as path,mroonga_escape(?) as query", shareId, pathPrefix, q).map { row =>
@@ -17,9 +22,14 @@ class GroongaFileSearchService extends ServiceBase {
           "--command_version 2 --sortby -_score --offset %d --limit %d " +
           "--filter 'share_id == \"%s\" && (path == \"%s\"|| path @^ \"%s\")' " +
           "--query '%s'").format(offset, limit, escapedShareId, escapedPath, joinPathElements(escapedPath, ""), escapedQuery)
-        println(cmd)
-        val json = parseJSON(queryForSingleRow("select mroonga_command(?) as json", cmd).headOption.map(_("json"):String).get)
-        println(json)
+        val json = parseJSON( (try {
+          queryForSingleRow("select mroonga_command(?) as json", cmd)
+        }
+		catch {
+		  case e:SQLException =>
+		    execute("flush tables")
+		    queryForSingleRow("select mroonga_command(?) as json", cmd)
+		}).headOption.map(_("json"):String).get)
         val results = json.get(0).iterator().drop(2).map { row =>
         	(
         		File(id=row.get(0).asText(),path=row.get(1).asText(),name=row.get(2).asText(),

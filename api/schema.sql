@@ -2,6 +2,7 @@ create table files (
 	share_id varchar(64) character set ascii,
 	id char(40) character set ascii,
 	path varchar(333) not null,
+	path_ft text not null,
 	name text not null,
 	atime datetime not null,
 	ctime datetime not null,
@@ -11,9 +12,9 @@ create table files (
 	contents longtext,
 	sha1sum char(40) character set ascii default 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX',
 	primary key(share_id,id),
-	fulltext key(path) COMMENT 'parser "TokenBigramSplitSymbolAlphaDigit"',
 	index(path),
 	index(sha1sum),
+	fulltext key(path_ft) COMMENT 'parser "TokenBigramSplitSymbolAlphaDigit"',
 	fulltext key(name) COMMENT 'parser "TokenBigramSplitSymbolAlphaDigit"',
 	fulltext key(contents)
 ) engine=mroonga;
@@ -28,3 +29,6 @@ create table indexing_queue (
 	num_retry int not null default 0,
 	primary key(share_id,file_id)
 ) engine=InnoDB;
+
+grant reload on *.* to oscar@localhost;
+grant reload on *.* to oscar@'%.local';

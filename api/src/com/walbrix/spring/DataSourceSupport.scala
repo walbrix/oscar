@@ -184,6 +184,10 @@ trait DataSourceSupport {
 	    }
 	  )
 	}
+	
+	protected def execute(sql:String) = {
+		jdbcTemplate.execute(sql)
+	}
 
 	protected def queryForSingleRow(sql:String, args:Any*):Option[Row] = 
 		jdbcTemplate.queryForList(sql, toJavaObjectSeq(args:_*):_*).headOption.map(Row(_))
