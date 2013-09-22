@@ -18,7 +18,7 @@ class IndexingRequestHandler extends RequestHandlerBase {
 	@RequestMapping(value=Array(""), method = Array(RequestMethod.GET))
 	@ResponseBody
 	def get(@RequestParam(value="limit",defaultValue="5000") limit:Int):Seq[IndexingRequest] =
-		queryForSeq("select * from indexing_queue where num_retry < 5 order by ifnull(updated_at,created_at) limit ?", limit).map { row=>
+		queryForSeq("select * from indexing_queue where num_retry < 5 order by num_retry,ifnull(updated_at,created_at) limit ?", limit).map { row=>
 		  	(row("share_id"), row("file_id"),row("path"),row("created_at"),row("updated_at"),row("num_retry")):IndexingRequest
 		}
 

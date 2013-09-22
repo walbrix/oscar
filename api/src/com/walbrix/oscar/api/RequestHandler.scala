@@ -70,9 +70,9 @@ class RequestHandler extends RequestHandlerBase {
 	@ResponseBody
 	def post(@PathVariable("share_id") shareId:String,path:String,name:String,atime:Long,ctime:Long,mtime:Long,size:Long):TypedResult[String] = {
 		val fullPath =  path.last match  { case '/' => path + name case _ => path + "/" + name }
-		update("insert into files(share_id,id,path,name,atime,ctime,mtime,size,sha1sum,updated_at) values(?,sha1(?),?,?,?,?,?,?,'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX',now()) " + 
+		update("insert into files(share_id,id,path,path_ft,name,atime,ctime,mtime,size,sha1sum,updated_at) values(?,sha1(?),?,?,?,?,?,?,'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX',now()) " + 
 		    "on duplicate key update atime=?,ctime=?,mtime=?,size=?,updated_at=now(),sha1sum='XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'",
-		    shareId, fullPath, path, name, atime:Timestamp, ctime:Timestamp, mtime:Timestamp, size,
+		    shareId, fullPath, path, path, name, atime:Timestamp, ctime:Timestamp, mtime:Timestamp, size,
 		    atime:Timestamp, ctime:Timestamp, mtime:Timestamp, size) match {
 		  case 0 => false
 		  case _ => TypedResult.success(queryForString("select sha1(?)", fullPath))
