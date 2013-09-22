@@ -14,7 +14,7 @@ class GroongaFileSearchService extends ServiceBase {
 		}.get
         val cmd = ("select files --match_columns path||name*10||contents*5 " +
           "--output_columns 'id,path,name,atime,ctime,mtime,size,sha1sum,updated_at,snippet_html(path),snippet_html(name),snippet_html(contents)' " + 
-          "--command_version 2 --sortby _score --offset %d --limit %d " +
+          "--command_version 2 --sortby -_score --offset %d --limit %d " +
           "--filter 'share_id == \"%s\" && (path == \"%s\"|| path @^ \"%s\")' " +
           "--query '%s'").format(offset, limit, escapedShareId, escapedPath, joinPathElements(escapedPath, ""), escapedQuery)
         println(cmd)

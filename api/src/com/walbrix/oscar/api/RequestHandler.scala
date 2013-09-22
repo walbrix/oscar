@@ -58,7 +58,7 @@ class RequestHandler extends RequestHandlerBase {
 	@ResponseBody
 	def count(@PathVariable("share_id") shareId:String,
 	    @RequestParam(value="path_prefix",defaultValue="/") pathPrefix:String,
-	    @RequestParam(value="limit",defaultValue="100") limit:Int):Seq[(String,String,String)] = {
+	    @RequestParam(value="limit",defaultValue="500") limit:Int):Seq[(String,String,String)] = {
 		queryForSeq("select id,path,name from files where share_id=? and (path=? or path like ?) and sha1sum='XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX' limit ?",
 		    shareId, pathPrefix, joinPathElements(pathPrefix, "%"), limit).map { row=>
 		    (row("id"),row("path"),row("name")):(String,String,String)
@@ -138,7 +138,7 @@ class RequestHandler extends RequestHandlerBase {
 		}
 		dups.map { sha1sum =>
 			dupedFiles.getOrElse(sha1sum, Seq())
-		}
+		}.filter(_.size > 0)
 	}
 
 	@RequestMapping(value=Array("{share_id}/search"), method = Array(RequestMethod.GET))
