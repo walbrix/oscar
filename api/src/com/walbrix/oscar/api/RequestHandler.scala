@@ -89,6 +89,8 @@ class RequestHandler extends RequestHandlerBase {
 	def deleteDir(@PathVariable("share_id") shareId:String,@RequestParam("path_prefix") pathPrefix:String):Result = {
 		if (pathPrefix == "" || pathPrefix == "/") throw new IllegalArgumentException()
 		update("delete from files where share_id=? and (path=? or path like ?)", shareId, pathPrefix, joinPathElements(pathPrefix, "%")) > 0
+		
+		//delete files --filter 'share_id == "share" && (path == "/volter"|| path @^ "/volter/")'
 	}
 	
 	// curl http://localhost:8080/oscar/file/0ae8aae04779093056a501782235c73306b3238b -H "Content-Type: text/plain" -d @.mysql_history
