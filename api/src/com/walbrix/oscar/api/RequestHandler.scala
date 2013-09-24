@@ -30,7 +30,6 @@ class RequestHandler extends RequestHandlerBase {
 	implicit private def row2file(row:Row):File =
 		File(row("id"), row("path"), row("name"), 
 		    row("atime"), row("ctime"), row("mtime"), row("size"),row("sha1sum"),row("updated_at"))
-
 	// <4096 == ""
 	// <65536 == "0"
 	// <1048576 == "00"
@@ -83,7 +82,6 @@ class RequestHandler extends RequestHandlerBase {
 	@ResponseBody
 	def delete(@PathVariable("share_id") shareId:String,@PathVariable("file_id") fileId:String):(Boolean,Option[Any]) = {
 		val rst = update("delete from files where share_id=? and id=?", shareId, fileId)
-		execute("flush tables")
 		rst > 0
 	}
 	
@@ -91,7 +89,6 @@ class RequestHandler extends RequestHandlerBase {
 	def deleteDir(@PathVariable("share_id") shareId:String,@RequestParam("path_prefix") pathPrefix:String):Result = {
 		if (pathPrefix == "" || pathPrefix == "/") throw new IllegalArgumentException()
 		val rst = update("delete from files where share_id=? and (path=? or path like ?)", shareId, pathPrefix, joinPathElements(pathPrefix, "%"))
-		execute("flush tables")
 		rst > 0
 		//delete files --filter 'share_id == "share" && (path == "/volter"|| path @^ "/volter/")'
 	}

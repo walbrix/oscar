@@ -25,4 +25,11 @@ class AdminRequestHandler extends RequestHandlerBase {
 		execute("flush tables")
 		true
   	}
+
+	@RequestMapping(value=Array("FLUSH"), method = Array(RequestMethod.POST))
+	@ResponseBody
+	def flush():Result = {
+		execute("flush tables")
+		true
+	}
 }
