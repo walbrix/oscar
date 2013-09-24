@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.bind.annotation.RequestMethod
 import org.springframework.web.bind.annotation.ResponseBody
+import java.sql.SQLException
 
 @Controller
 @RequestMapping(Array("admin"))
@@ -13,8 +14,15 @@ class AdminRequestHandler extends RequestHandlerBase {
 	@RequestMapping(value=Array("RESET"), method=Array(RequestMethod.POST))
 	@ResponseBody
 	def reset():Result = {
+		try {
+			execute("flush tables")
+		}
+		catch {
+		  case ex:SQLException => ;
+		}
 		execute("truncate table files")
 		execute("truncate table indexing_queue")
+		execute("flush tables")
 		true
   	}
 }

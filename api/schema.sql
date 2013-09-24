@@ -1,5 +1,5 @@
 create table files (
-	share_id varchar(64) character set ascii,
+	share_id varchar(128) character set utf8,
 	id char(40) character set ascii,
 	path varchar(333) not null,
 	path_ft text not null,

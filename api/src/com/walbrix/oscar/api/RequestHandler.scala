@@ -82,14 +82,17 @@ class RequestHandler extends RequestHandlerBase {
 	@RequestMapping(value=Array("{share_id}/{file_id}"), method = Array(RequestMethod.DELETE))
 	@ResponseBody
 	def delete(@PathVariable("share_id") shareId:String,@PathVariable("file_id") fileId:String):(Boolean,Option[Any]) = {
-		update("delete from files where share_id=? and id=?", shareId, fileId) > 0
+		val rst = update("delete from files where share_id=? and id=?", shareId, fileId)
+		execute("flush tables")
+		rst > 0
 	}
 	
 	@RequestMapping(value=Array("{share_id}"), method=Array(RequestMethod.DELETE))
 	def deleteDir(@PathVariable("share_id") shareId:String,@RequestParam("path_prefix") pathPrefix:String):Result = {
 		if (pathPrefix == "" || pathPrefix == "/") throw new IllegalArgumentException()
-		update("delete from files where share_id=? and (path=? or path like ?)", shareId, pathPrefix, joinPathElements(pathPrefix, "%")) > 0
-		
+		val rst = update("delete from files where share_id=? and (path=? or path like ?)", shareId, pathPrefix, joinPathElements(pathPrefix, "%"))
+		execute("flush tables")
+		rst > 0
 		//delete files --filter 'share_id == "share" && (path == "/volter"|| path @^ "/volter/")'
 	}
 	
