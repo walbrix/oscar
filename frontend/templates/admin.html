@@ -1,0 +1,99 @@
+{%extends "page.html"%}
+{%block title%}管理メニュー{%endblock%}
+
+{%block contents%}
+<div style="margin-top:1em;">
+  <ol class="breadcrumb">
+    <li><a href="/"><span class="glyphicon glyphicon-home"></span></a></li>
+    <li class="active"><span class="glyphicon glyphicon-cog"></span> 管理メニュー</li>
+  </ol>
+  <h2>管理メニュー</h2>
+  <h3>全文検索用インデックス処理ステータス</h3>
+  <p>全文検索インデックス作成処理待ち及び処理失敗の一覧を表示できます。</p>
+  <div>
+    <a class="btn btn-default" href="indexing.html">全文検索インデックス処理ステータス表示</a>
+  </div>
+  <h3>データベースの完全同期</h3>
+  <p>検索結果と実際のファイルをすぐに一致させたい時に使用してください。このリクエストをしなくても通常の同期は随時、完全同期は数時間おきに自動で行われています。</p>
+  <div>
+    <a href="#sync-request-modal" data-toggle="modal" class="btn btn-warning">データベースの同期をリクエストする</a>
+  </div>
+
+  <div class="modal fade" id="sync-request-modal">
+    <div class="modal-dialog">
+      <div class="modal-content">
+	<div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+          <h4 class="modal-title">データベースの完全同期</h4>
+	</div>
+	<div class="modal-body">
+          <p>データベースの完全同期をシステムにリクエストします。この処理には時間がかかる場合があります。</p>
+	</div>
+	<div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">キャンセル</button>
+          <button type="button" class="sync-request btn btn-warning" data-dismiss="modal">同期をリクエストする</button>
+	</div>
+      </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+  </div><!-- /.modal -->
+
+  <h3>データベースの完全リセット</h3>
+  <p>インデックスが破損してしまいシステムが正常に動作しなくなった場合にのみ使用してください。インデックスが再度構築されるまでには相当の時間がかかります。</p>
+  <div>
+    <a href="#reset-database-modal" data-toggle="modal" class="btn btn-danger">データベースの完全リセットを行う</a>
+  </div>
+
+  <div class="modal fade" id="reset-database-modal">
+    <div class="modal-dialog">
+      <div class="modal-content">
+	<div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+          <h4 class="modal-title">データベースの完全リセット</h4>
+	</div>
+	<div class="modal-body">
+          <p>データベースの完全リセットを行います（共有ファイルは削除されません）。ファイルが多い場合、データの再生成には相当の時間がかかります（5万ファイルで1時間など）。</p>
+	</div>
+	<div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">キャンセル</button>
+          <button type="button" class="reset-database btn btn-danger" data-dismiss="modal">データベースをリセットする</button>
+	</div>
+      </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+  </div><!-- /.modal -->
+</div>
+{%endblock%}
+
+{%block script%}
+<script type="text/javascript">
+$(document).ready(function(){
+    $(".sync-request").click(function(){
+        $.ajax(
+            {
+                url:"./request_sync",
+                type:"POST",
+                success: function(json_data) { alert("同期がリクエストされました。"); },
+                error:function() { alert("Server error.") },
+                complete:function(data) {}
+            }
+        );
+    });
+    $(".reset-database").click(function(){
+        $.ajax(
+            {
+                url:"./reset_database",
+                type:"POST",
+                success: function(json_data) {
+                    if (json_data.result) {
+                        alert("データベースがリセットされました。"); 
+                    } else {
+                        alert("リセットに失敗しました。");
+                    }
+                },
+                error:function() { alert("Server error.") },
+                complete:function(data) {}
+            }
+        );
+    });
+});
+</script>
+{%endblock%}

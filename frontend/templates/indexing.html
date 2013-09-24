@@ -1,0 +1,67 @@
+{%extends "page.html"%}
+{%block title%}管理 - インデックス{%endblock%}
+
+{%block contents%}
+<div style="margin-top:1em;">
+  <ol class="breadcrumb">
+    <li><a href="/"><span class="glyphicon glyphicon-home"></span></a></li>
+    <li><a href="/_admin/"><span class="glyphicon glyphicon-cog"></span> 管理メニュー</a></li>
+    <li class="active"><span class="glyphicon glyphicon-search"></span> インデックス</li>
+  </ol>
+  <h2>全文検索用インデックス</h2>
+
+  <p>全文検索用のインデックスは原則としてファイルが作成・更新された順に処理されます。処理待ち一覧にはこれから処理される予定のファイル最大100件、処理失敗一覧には最近処理に失敗したファイル最大100件を表示しています。</p>
+  <p>全文検索用インデックスが（まだ）作成されていないファイルも、ファイル名やフォルダ名による検索は可能です。</p>
+  <h3>インデックス作成処理の失敗とは</h3>
+  <p>検索用テキストを元のファイルから抽出する処理に時間がかかりすぎた場合や、抽出プログラムが対応できない書式が用いられている場合に失敗として扱われます。同じファイルに対して最大 5回まで処理が試行されます。</p>
+
+  <ul class="nav nav-tabs">
+    <li class="active"><a href="#awaiting" data-toggle="tab">処理待ち</a></li>
+    <li><a href="#failed" data-toggle="tab">処理失敗</a></li>
+  </ul>
+
+  <div class="tab-content">
+    <div class="tab-pane active" id="awaiting">
+  <table class="table">
+    <thead>
+      <tr>
+	<th>発生時刻</th><th>試行回数</th><th>共有名</th><th>ファイル名</th>
+      </tr>
+    </thead>
+    <tbody>
+      {%for item in awaiting%}
+      <tr>
+	<td style="width:10em;">{{item[3]|datetime_string}}</td>
+	<td style="width:5em;">{%if item[5] == 0%}新規{%else%}再試行<br/>({{item[5]+1}}回目){%endif%}</td>
+	<td>{{item[0]}}</td>
+	<td>{{item[2]}}</td>
+      </tr>
+      {%endfor%}
+    </tbody>
+  </table>
+    </div>
+
+    <div class="tab-pane" id="failed">
+  <table class="table">
+    <thead>
+      <tr>
+	<th>発生時刻</th><th>処理時刻</th><th>失敗回数</th><th>共有名</th><th>ファイル名</th>
+      </tr>
+    </thead>
+    <tbody>
+      {%for item in failed%}
+      <tr>
+	<td style="width:10em;">{{item[3]|datetime_string}}</td>
+	<td style="width:10em;">{{item[4]|datetime_string}}</td>
+	<td>{{item[5]}}</td>
+	<td>{{item[0]}}</td>
+	<td>{{item[2]}}</td>
+      </tr>
+      {%endfor%}
+    </tbody>
+  </table>
+    </div>
+  </div>
+</div>
+{%endblock%}
+

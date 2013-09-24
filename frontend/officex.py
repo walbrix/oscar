@@ -3,7 +3,7 @@
 import sys
 import zipfile
 import re
-import bs4
+import lxml.etree
 
 interested_components = map(lambda x:re.compile(x), [r"^word/document\.xml$", "^xl/sharedStrings\.xml", "^ppt/slides/slide[0-9]+\.xml"])
 
@@ -14,12 +14,14 @@ def is_interested_component(filename):
 
 def trim(text):
     text = re.sub(ur'[ 　]+', ' ', text)
-    return text.strip()
+    return text.strip().encode("utf-8")
 
 def xml2text(xmlstream):
-    node = bs4.BeautifulSoup(xmlstream, from_encoding="utf-8")
-    node = filter(lambda x:x!="", map(lambda x:trim(x), node.findAll(text=True)))
-    return u' '.join(node)
+    #node = bs4.BeautifulSoup(xmlstream,features="xml")
+    doc = lxml.etree.parse(xmlstream)
+    node = filter(lambda x:x!="", map(lambda x:trim(x), doc.xpath("//text()")))
+    return ' '.join(node)
+    #return trim(lxml.etree.tostring(lxml.etree.parse(xmlstream), method="text",encoding="utf-8"))
 
 def zip2text(filename):
     z = zipfile.ZipFile(filename)

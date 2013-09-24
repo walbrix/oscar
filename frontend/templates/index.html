@@ -1,0 +1,44 @@
+{%extends "page.html"%}
+{%block title%}トップ{%endblock%}
+
+{%block contents%}
+<div style="margin-top:1em;">
+<h3>利用可能な共有フォルダ</h3>
+<dl class="dl-horizontal">
+{%for share in shares%}
+  <dt><big>{%if not share[2] %}<span class="glyphicon glyphicon-lock"></span> {%endif%}<a href="{{share[0]}}/">{{share[0]}} <span class="glyphicon glyphicon-folder-close"></span></a></big></dt>
+  <dd>{{share[3]}} (検索可能ファイル数{{counts[share[0]]}}件) {%if g.eden%} <a class="btn btn-success btn-xs" href="file://///{{request.environ["SERVER_NAME"]}}/{{share[0]}}">エクスプローラで開く</a> <a data-toggle="modal" href="#iehelp"><span class="glyphicon glyphicon-question-sign"></span></a>{%endif%}</dd>
+{%endfor%}
+</dl>
+
+{%if g.eden%}{%include "iehelp.html"%}{%endif%}
+
+<h3>システム情報</h3>
+<h4>CPU負荷</h4>
+<table class="table">
+  <thead>
+    <tr><th>直近</th><th>5分間平均</th><th>10分間平均</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      {%for item in loadavg%}
+      <td><div class="alert {%if item > 3.0 %}alert-danger{%elif item > 1.0 %}alert-warning{%else%}alert-success{%endif%}">{{item * 100}}%</div></td>
+      {%endfor%}
+    </tr>
+  </tbody>
+</table>
+<h4>ディスク容量</h4>
+<p class="text-center">総容量: {{total[0]}}</p>
+<div class="progress" style="height:3em;">
+  <div class="progress-bar progress-bar-warning" style="width: {{used[1]}}%">
+    使用中 {{used[0]}}<br/>({{used[1]}}%)
+  </div>
+  <div class="progress-bar progress-bar-success" style="width: {{free[1]}}%">
+    空き {{free[0]}}<br/>({{free[1]}}%)
+  </div>
+</div>
+
+</div>
+
+{%endblock%}
+

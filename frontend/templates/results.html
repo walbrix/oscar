@@ -1,0 +1,23 @@
+<h4>'{{q}}'の検索結果{%if results[0] > 0%} <small>{{results[0]}}件中{{results[1]|length}}件を表示</small>{%endif%}</h4>
+{%if results[0] > 0%}
+  {%for result in results[1]%}
+    <div class="media"{%if not result.available%}style="text-decoration:line-through;"{%endif%}>
+      <a class="pull-left" href="{{share_id|build_path_link(result.path, result.name)}}">
+	{%if result.suggested_filetype%}
+	  <img src="{{ url_for('static', filename='img/'+result.suggested_filetype+'.png') }}"/>
+	{%else%}
+	  <img src="{{ url_for('static', filename='img/unknown.png') }}" width="64"/>
+	{%endif%}
+      </a>
+      <div class="media-body">
+        <h4 class="media-heading"><a href="{{share_id|build_path_link(result.path, result.name)}}">{%if result.name_snippets|length > 0%}{%for name_snippet in result.name_snippets%}{{name_snippet|safe}}{%endfor%}{%else%}{{result.name}}{%endif%}</a> <small>{{result.size|size_string}} {{result.mtime|datetime_string}}更新</small></h4>
+	場所: <a href="{{share_id|build_path_link(result.path)}}">{%if result.path_snippets|length > 0%}{%for path_snippet in result.path_snippets%}{{path_snippet|safe}}{%endfor%}{%else%}{{result.path}}{%endif%}</a><br/>
+	{%for contents_snippet in result.contents_snippets%}
+	  ...{{contents_snippet|safe}}...
+	{%endfor%}
+      </div>
+    </div>
+  {%endfor%}
+{%else%}
+  該当するファイルはありません。
+{%endif%}

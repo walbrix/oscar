@@ -12,6 +12,9 @@ except:
     pass
 
 smb_conf = "/etc/samba/smb.conf"
+groonga_executable = "/usr/local/bin/groonga"
+mroonga_db = "/var/lib/mysql/oscar.mrn"
+run_dir = "/run/oscar"
 api_root="http://localhost:8080/oscar/"
 mysql_host="localhost"
 mysql_db="oscar"
@@ -113,3 +116,42 @@ def get_share_list():
         share_list.append(_get_share(parser,section))
     return share_list
 
+def suggest_filetype(filename):
+    types = {
+        ".xls":"xls",
+        ".xlsx":"xls",
+        ".ppt":"ppt",
+        ".pptx":"ppt",
+        ".pdf":"pdf",
+        ".html":"html",
+        ".htm":"html",
+        ".doc":"doc",
+        ".docx":"doc",
+        ".txt":"txt",
+        ".csv":"csv"
+    }
+    suffix = os.path.splitext(filename)[1]
+    if suffix.lower() not in types: return None
+    return types[suffix.lower()]
+
+def touch_run_file(filename):
+    fullpath = os.path.join(run_dir, filename)
+    with open(fullpath, "a"):
+        os.utime(fullpath, None)
+
+def check_run_file(filename):
+    fullpath = os.path.join(run_dir, filename)
+    return os.path.isfile(fullpath)
+
+def remove_run_file(filename):
+    fullpath = os.path.join(run_dir, filename)
+    if os.path.isfile(fullpath):
+        os.unlink(fullpath)
+        return True
+    return False
+
+def request_perform_walk():
+    touch_run_file("perform_walk")
+
+def request_perform_cleanup():
+    touch_run_file("perform_cleanup")

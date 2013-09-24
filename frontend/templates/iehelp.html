@@ -1,0 +1,23 @@
+<div class="modal fade" id="iehelp" tabindex="-1" role="dialog">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+	<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+	<h4 class="modal-title">Internet Explorerのセキュリティ設定</h4>
+      </div>
+      <div class="modal-body">
+	<p>Internet Explorerをご利用かつLAN内からアクセスしている場合、<button class="btn btn-success btn-xs">エクスプローラで開く</button> などのボタンを押すことで共有フォルダや中のファイルを直接開くことが可能です。共有ファイルを直接開くと、都度ダウンロードして利用する場合と違って共有フォルダ上のファイルを直接編集することができます。</p>
+	<p>この機能を有効にするには、Internet Explorerのセキュリティ設定が必要です。</p>
+	<p>インターネットオプションから「セキュリティ」タブを開き、信頼済みサイトを選択してサイト(S)ボタンを押してください。<br/><img src="{{ url_for('static', filename='img/iehelp01.png') }}"/></p>
+	<p>信頼済みサイト一覧に、本NASのURLを追加します。
+	<img src="{{ url_for('static', filename='img/iehelp02.png') }}"/></p>
+	<p>但しSSLを使用しないURLをリストに追加するには、「このゾーンのサイトにはすべてサーバの確認(https:)を必要とする」のチェックを外す必要があります。<br/>
+	<img src="{{ url_for('static', filename='img/iehelp03.png') }}"/></p>
+	<p>以上の設定を行うことにより、共有フォルダ・ファイルへの直接アクセスが可能になります。</p>
+      </div>
+      <div class="modal-footer">
+	<button type="button" class="btn btn-primary" data-dismiss="modal">閉じる</button>
+      </div>
+    </div>
+  </div>
+</div>

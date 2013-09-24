@@ -1,0 +1,57 @@
+{%extends "page.html"%}
+{%block title%}/{{share_id}}/{{path}}{%endblock%}
+
+{%block contents%}
+<div style="margin-top:1em;">
+  <ol class="breadcrumb">
+    <li><a href="/"><span class="glyphicon glyphicon-home"></span></a></li>
+    {%if path_elements|length == 0%}
+      <li class="active"><span class="glyphicon glyphicon-folder-open"></span> {{share_id}}
+      {%if g.eden%} <a class="btn btn-success btn-xs" href="file://///{{request.environ["SERVER_NAME"]}}/{{share_id}}">エクスプローラで開く</a> <a data-toggle="modal" href="#iehelp"><span class="glyphicon glyphicon-question-sign"></span></a>{%endif%}
+      <a href="./dups.html" class="btn btn-default btn-xs">重複ファイルの検出»</a>
+    {%else%}
+      <li><a href="{{share_id|build_path_link}}"><span class="glyphicon glyphicon-folder-close"></span> {{share_id}}</a>
+    {%endif%}</li>
+    {% for path_element in path_elements %}
+      {%if loop.last%}
+        <li class="active"><span class="glyphicon glyphicon-folder-open"></span> {{path_element[0]}}
+	{%if g.eden%} <a class="btn btn-success btn-xs" href="file://///{{request.environ["SERVER_NAME"]}}{{share_id|build_path_link(path_element[1])}}">エクスプローラで開く</a> <a data-toggle="modal" href="#iehelp"><span class="glyphicon glyphicon-question-sign"></span></a>{%endif%}
+      {%else%}
+        <li><a href="{{share_id|build_path_link(path_element[1])}}"><span class="glyphicon glyphicon-folder-close"></span> {{path_element[0]}} </a>
+      {%endif%}
+      </li>
+    {% endfor %}
+  </ol>
+</div>
+
+{%if g.eden%}{%include "iehelp.html"%}{%endif%}
+
+{%if count > 0%}
+<h3>検索キーワード <small>配下{{count}}件のファイルから検索します</small></h3>
+<input type="text" name="q" placeholder="keyword" size="50"{%if q%} value="{{q}}"{%endif%}/> <span class="search-in-progress" style="display:none;"><span class="glyphicon glyphicon-refresh"></span> 検索中...</span>
+{%else%}
+<div class="alert alert-warning">このフォルダの配下には検索可能なファイルがありません。</div>
+{%endif%}
+
+<div id="search-results" style="margin:2em;">{%if results%}{%include "results.html"%}{%endif%}</div>
+
+<h3>フォルダの内容</h3>
+<table class="table table-condensed table-hover">
+  <thead>
+    <tr><th>名称</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><span class="glyphicon glyphicon-chevron-up"></span> <a href="../">上の階層へ</a></td></tr>
+    {%for dir in dirs%}
+    <tr><td><span class="glyphicon glyphicon-folder-close"></span> <a href="./{{dir}}/">{{dir}}</a></td></tr>
+    {%endfor%}
+    {%for file in files%}
+    <tr><td><span class="glyphicon glyphicon-file"></span> {%if g.eden%} <a class="btn btn-success btn-xs" href="file://///{{request.environ["SERVER_NAME"]}}{{share_id|build_path_link(path,file)}}">直接開く</a> {%endif%}<a href="./{{file}}">{{file}}</a></td></tr>
+    {%endfor%}
+  </tbody>
+</table>
+{%endblock%}
+
+{%block script%}
+<script src="{{ url_for('static', filename='js/search.js')}}"></script>
+{%endblock%}

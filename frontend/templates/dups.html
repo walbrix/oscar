@@ -1,0 +1,38 @@
+{%extends "page.html"%}
+{%block title%}/{{share_id}} 重複ファイルの検出{%endblock%}
+
+{%block contents%}
+<div style="margin-top:1em;">
+  <ol class="breadcrumb">
+    <li><a href="/"><span class="glyphicon glyphicon-home"></span></a></li>
+    <li><a href="/{{share_id}}/"><span class="glyphicon glyphicon-folder-open"></span> {{share_id}}</a></li>
+    <li class="active"><span class="glyphicon glyphicon-tags"></span> 重複ファイルの検出</li>
+  </ol>
+</div>
+
+<h2>重複ファイルの検出</h2>
+
+{%for dup in dups%}
+<h3>重複数{{dup|length}} <small>ファイルサイズ {{ dup[0].size|size_string }}</small></h3>
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th>場所</th><th>ファイル名</th>
+    </tr>
+  </thead>
+  <tbody>
+    {%for file in dup%}
+    <tr>
+      <td><span class="glyphicon glyphicon-folder-close"></span> <a href="{{share_id|build_path_link(file.path)}}">{{file.path}}</a></td>
+      <td><span class="glyphicon glyphicon-file"></span> <a href="{{share_id|build_path_link(file.path,file.name)}}">{{file.name}}</a></td>
+    </tr>
+    {%endfor%}
+  </tbody>
+</table>
+{%endfor%}
+
+{%if dups|length == 0%}
+  <strong>重複ファイルは見つかっていません</strong>
+{%endif%}
+
+{%endblock%}
