@@ -38,7 +38,7 @@ def logger_init(name, verbose=False, filename=None):
 def register_file(share_id, base_dir, filename):
     if os.path.islink(filename): return
 
-    ignore_prefixes = ["._"]
+    ignore_prefixes = [".", "#"]
     ignore_suffixes = [".tmp", ".bak", "~"]
     basename = os.path.basename(filename)
     if basename == ".DS_Store": return
