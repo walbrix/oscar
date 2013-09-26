@@ -113,8 +113,8 @@ def dir(share_id, path):
     results = search.mroonga_search(share, q, '/' + path) if q else None
 
     root, dirs, files = next(os.walk(real_path))
-    dirs = map(lambda x:x if isinstance(x,unicode) else x.decode("utf-8"), dirs)
-    files = map(lambda x:x if isinstance(x,unicode) else x.decode("utf-8"), files)
+    dirs = filter(lambda x:not x.startswith('.'), map(lambda x:x if isinstance(x,unicode) else x.decode("utf-8"), dirs))
+    files = filter(lambda x:not x.startswith('.'), map(lambda x:x if isinstance(x,unicode) else x.decode("utf-8"), files))
     return flask.render_template("dir.html",dirs=dirs,files=files,count=count,share_id=share_id,path=path,path_elements=path_elements,results=results,q=q)
 
 @app.route('/<share_id>/search', defaults={'path': ''})

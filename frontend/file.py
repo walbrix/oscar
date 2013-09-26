@@ -37,6 +37,16 @@ def logger_init(name, verbose=False, filename=None):
 
 def register_file(share_id, base_dir, filename):
     if os.path.islink(filename): return
+
+    ignore_prefixes = [".", "#"]
+    ignore_suffixes = [".tmp", ".bak", "~"]
+    basename = os.path.basename(filename)
+    if basename == ".DS_Store": return
+    basename = basename.lower()
+    if any(map(lambda x:basename.startswith(x), ignore_prefixes)) or any(map(lambda x:basename.endswith(x), ignore_suffixes)):
+        log.debug("Ignoring %s" % basename.decode("utf-8"))
+        return
+
     log.debug("register_file(%s,%s,%s)", share_id, base_dir, filename)
     if not os.path.isfile(filename): return
     os_pathname = os.path.realpath(filename)
@@ -104,9 +114,7 @@ def process_dir(events, share_id, base_dir, full_path):
 def process_file(events, share_id, base_dir, full_path):
     if (events & pyinotify.IN_CLOSE_WRITE) or (events & pyinotify.IN_MOVED_TO):
         log.debug("process_file/IN_CLOSE_WRITE|IN_MOVED_TO")
-        ignore_suffixes = [".tmp"]
-        if not any(map(lambda x:full_path.lower().endswith(x), ignore_suffixes)):
-            register_file(share_id, base_dir, full_path)
+        register_file(share_id, base_dir, full_path)
     elif (events & pyinotify.IN_DELETE) or (events & pyinotify.IN_MOVED_FROM):
         log.debug("process_file/IN_DELETE|IN_MOVED_FROM")
         unregister_file(share_id, base_dir, full_path)
