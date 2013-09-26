@@ -29,6 +29,3 @@ create table indexing_queue (
 	num_retry int not null default 0,
 	primary key(share_id,file_id)
 ) engine=InnoDB;
-
-grant reload on *.* to oscar@localhost;
-grant reload on *.* to oscar@'%.local';
