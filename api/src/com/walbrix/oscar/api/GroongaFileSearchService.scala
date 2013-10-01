@@ -37,8 +37,8 @@ class GroongaFileSearchService extends ServiceBase {
         		    ctime=row.get(4).asDouble(),
         		    mtime=row.get(5).asDouble(),
         		    size=row.get(6).asLong(),
-        		    sha1sum=row.get(7).asText(),
-        		    updatedAt=row.get(8).asDouble()),
+        		    sha1sum=row.get(7).asText() match { case ""=>None case null=>None case x:String=>Some(x) },
+        		    updatedAt=Some(row.get(8).asDouble())),
         		row.get(9).iterator().map(_.asText).toSeq,
         		row.get(10).iterator().map(_.asText).toSeq,
         		row.get(11).iterator().map(_.asText).toSeq

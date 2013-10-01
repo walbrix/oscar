@@ -17,7 +17,7 @@ import org.apache.commons.io.IOUtils
 import org.springframework.beans.factory.annotation.Autowired
 
 case class File(id:String,path:String,name:String,
-    atime:Timestamp,ctime:Timestamp,mtime:Timestamp,size:Long,sha1sum:String,updatedAt:Timestamp)
+    atime:Timestamp,ctime:Timestamp,mtime:Timestamp,size:Long,sha1sum:Option[String],updatedAt:Option[Timestamp])
 
 @Controller
 @RequestMapping(Array("file"))
@@ -63,19 +63,39 @@ class RequestHandler extends RequestHandlerBase {
 		    (row("id"),row("path"),row("name")):(String,String,String)
 		}
 	}
+	
+	private def registerFile(shareId:String,path:String,name:String,atime:Timestamp,ctime:Timestamp,mtime:Timestamp,size:Long):TypedResult[String] = {
+		val fullPath =  path.last match  { case '/' => path + name case _ => path + "/" + name }
+		update("insert into files(share_id,id,path,path_ft,name,atime,ctime,mtime,size,sha1sum,updated_at) values(?,sha1(?),?,?,?,?,?,?,?,'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX',now()) " + 
+		    "on duplicate key update atime=?,ctime=?,mtime=?,size=?,updated_at=now(),sha1sum='XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'",
+		    shareId, fullPath, path, path, name, atime, ctime, mtime, size,
+		    atime:Timestamp, ctime:Timestamp, mtime:Timestamp, size) match {
+		  case 0 => false
+		  case _ => TypedResult.success(queryForString("select sha1(?)", fullPath))
+		}
+	}
 
 	// curl http://localhost:8080/oscar/file/ -d "path=hoge.doc" -d "atime=1000" -d "ctime=1000" -d "mtime=1000" -d "size=1024"
 	@RequestMapping(value=Array("{share_id}"), method = Array(RequestMethod.POST))
 	@ResponseBody
 	def post(@PathVariable("share_id") shareId:String,path:String,name:String,atime:Long,ctime:Long,mtime:Long,size:Long):TypedResult[String] = {
-		val fullPath =  path.last match  { case '/' => path + name case _ => path + "/" + name }
-		update("insert into files(share_id,id,path,path_ft,name,atime,ctime,mtime,size,sha1sum,updated_at) values(?,sha1(?),?,?,?,?,?,?,?,'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX',now()) " + 
-		    "on duplicate key update atime=?,ctime=?,mtime=?,size=?,updated_at=now(),sha1sum='XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'",
-		    shareId, fullPath, path, path, name, atime:Timestamp, ctime:Timestamp, mtime:Timestamp, size,
-		    atime:Timestamp, ctime:Timestamp, mtime:Timestamp, size) match {
-		  case 0 => false
-		  case _ => TypedResult.success(queryForString("select sha1(?)", fullPath))
-		}
+		registerFile(shareId,path,name,atime,ctime,mtime,size)
+	}
+
+	@RequestMapping(value=Array("{share_id}/bulk"), method = Array(RequestMethod.POST), consumes=Array("application/json"))
+	@ResponseBody
+	def postBulk(@PathVariable("share_id") shareId:String, @RequestBody files:Seq[File]):Seq[String] = {
+		files.map { file =>
+			registerFile(shareId,file.path,file.name,file.atime,file.ctime,file.mtime,file.size)._2
+		}.filter(_ != None).map(_.get)
+	}
+
+	@RequestMapping(value=Array("{share_id}/noexist"), method=Array(RequestMethod.POST), consumes=Array("application/json"))
+	@ResponseBody
+	def noexist(@PathVariable("share_id") shareId:String,@RequestBody fileIds:Seq[String]):Seq[String] = {
+		val cond = fileIds.map("'" + _ + "'").mkString(",")
+		val exists = queryForSeq("select id from files where id in %s".format(cond)).map(_("id"):String)
+		(fileIds.toSet &~ exists.toSet).toSeq
 	}
 	
 	@RequestMapping(value=Array("{share_id}/{file_id}"), method = Array(RequestMethod.DELETE))
@@ -136,7 +156,7 @@ class RequestHandler extends RequestHandlerBase {
 		val dupedFiles = scala.collection.mutable.Map[String,Seq[File]]()
 		queryForSeq("select id,path,name,atime,ctime,mtime,size,updated_at,sha1sum from files where share_id=? and sha1sum in (%s)".format(dupsCond), shareId).foreach { row =>
 		  	val file:File = row
-		  	dupedFiles.put(file.sha1sum, dupedFiles.getOrElse(file.sha1sum, Seq()) :+ file)
+		  	dupedFiles.put(file.sha1sum.get, dupedFiles.getOrElse(file.sha1sum.get, Seq()) :+ file)
 		}
 		dups.map { sha1sum =>
 			dupedFiles.getOrElse(sha1sum, Seq())
