@@ -105,6 +105,19 @@ class RequestHandler extends RequestHandlerBase {
 		rst > 0
 	}
 	
+	@RequestMapping(value=Array("{share_id}/bulk_delete"), method=Array(RequestMethod.POST), consumes=Array("application/json"))
+	@ResponseBody
+	def deleteBulk(@PathVariable("share_id") shareId:String,@RequestBody fileIds:Seq[String]):TypedResult[Int] = {
+		TypedResult.success(
+			fileIds.map { fileId =>
+				update("delete from files where share_id=? and id=?", shareId, fileId) match {
+				  case 0 => 0
+				  case _ => 1
+				}
+			}.sum
+		)
+	}
+	
 	@RequestMapping(value=Array("{share_id}"), method=Array(RequestMethod.DELETE))
 	def deleteDir(@PathVariable("share_id") shareId:String,@RequestParam("path_prefix") pathPrefix:String):Result = {
 		if (pathPrefix == "" || pathPrefix == "/") throw new IllegalArgumentException()
