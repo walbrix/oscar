@@ -6,12 +6,17 @@ import urllib2
 import httplib2
 import json
 import ConfigParser
+import binascii
+
 try:
+    import tdb
+    import smbpasswd
     import MySQLdb
 except:
     pass
 
 smb_conf = "/etc/samba/smb.conf"
+smb_passdb = "/var/lib/samba/private/passdb.tdb"
 groonga_executable = "/usr/local/bin/groonga"
 mroonga_db = "/var/lib/mysql/oscar.mrn"
 run_dir = "/run/oscar"
@@ -40,7 +45,8 @@ def encoded_dict(in_dict):
  
 # GETメソッドを実行し、返値をJSONデコードして返す
 def get(func, params = {}):
-    url = api_root + "/" + func
+    print func
+    url = api_root + "/" + urllib.quote(func)
     if params != None and len(params) > 0:
         url += "?" + urllib.urlencode(encoded_dict(params))
     return json.load(urllib2.urlopen(url))
@@ -64,12 +70,12 @@ def post(func, params, content_type = "application/x-www-form-urlencoded"):
     else:
         request_body = str(params)
  
-    req = urllib2.Request(api_root + "/" + func, data=request_body, headers={'Content-type': content_type})
+    req = urllib2.Request(api_root + "/" + urllib.quote(func), data=request_body, headers={'Content-type': content_type})
     return json.load(urllib2.urlopen(req))
 
 def delete(func, params={}):
     http = httplib2.Http()
-    url = api_root + "/" + func
+    url = api_root + "/" + urllib.quote(func)
     if params != None and len(params) > 0:
         url += "?" + urllib.urlencode(encoded_dict(params))
     response, content = http.request(url, "DELETE")
@@ -155,3 +161,12 @@ def request_perform_walk():
 
 def request_perform_cleanup():
     touch_run_file("perform_cleanup")
+
+def check_smb_passwd(username, passwd):
+    passdb = tdb.open(smb_passdb)
+    try:
+        user_record = passdb.get("USER_%s\x00" % username.lower())
+        if not user_record: return False
+        return binascii.a2b_hex(smbpasswd.nthash(passwd)) in user_record
+    finally:
+        passdb.close()

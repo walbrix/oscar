@@ -35,18 +35,20 @@ def logger_init(name, verbose=False, filename=None):
     log.setLevel(10 if verbose else 20)
     return log
 
-def register_file(share_id, base_dir, filename):
-    if os.path.islink(filename): return
-
+def is_ignoreable(filename):
     ignore_prefixes = [".", "#"]
     ignore_suffixes = [".tmp", ".bak", "~"]
     basename = os.path.basename(filename)
-    if basename == ".DS_Store": return
+    if basename == ".DS_Store": return True
     basename = basename.lower()
     if any(map(lambda x:basename.startswith(x), ignore_prefixes)) or any(map(lambda x:basename.endswith(x), ignore_suffixes)):
         log.debug("Ignoring %s" % basename.decode("utf-8"))
-        return
+        return True
+    #else
+    return False
 
+def register_file(share_id, base_dir, filename):
+    if os.path.islink(filename) or is_ignoreable(filename): return
     log.debug("register_file(%s,%s,%s)", share_id, base_dir, filename)
     if not os.path.isfile(filename): return
     os_pathname = os.path.realpath(filename)
@@ -169,7 +171,7 @@ def watch(args):
 
 def walk(args):
     def process(share_id, base_dir, os_pathname):
-        if not os_pathname.startswith(base_dir + '/'): return # it can't be but just for sure
+        if not os_pathname.startswith(base_dir + '/') or is_ignoreable(os_pathname): return
         pathname = os_pathname[len(base_dir):]
         file_id = hashlib.sha1(pathname).hexdigest()
         exists = len(oscar.get("/file/%s" % share_id, {"file_id_prefix":file_id})) > 0
@@ -256,8 +258,11 @@ def process_create_index(shares, share_id, file_id, path):
         log.info("%s:%s(%s) marked as done. %s" % (share_id, file_id, path, str(rst)))
     except KeyboardInterrupt, e:
         raise e
-    except Exception, e:
-        log.error(e)
+    except urllib2.HTTPError, e:
+        log.error(e.read())
+        raise e
+    except:
+        log.exception("Exception")
         rst = oscar.post("/indexing/%s/%s/fail" % (share_id,file_id), {})
         log.info("Indexing for %s:%s(%s) marked as fail: %s" % (share_id, file_id, path, str(rst)))
 

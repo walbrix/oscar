@@ -16,8 +16,11 @@
       <div class="header" style="padding-top: 20px;border-bottom: 1px solid #e5e5e5;">
 	<ul class="nav nav-pills pull-right">
 	  <li><a data-toggle="modal" href="#about"><span class="glyphicon glyphicon-info-sign"></span> About</a></li>
+	  <li{%if request.path.startswith("/_admin/")%} class="active"{%endif%}><a href="/_admin/"><span class="glyphicon glyphicon-cog"></span> 管理</a></li> 
 	  <li{%if request.path=="/"%} class="active"{%endif%}><a href="/"><span class="glyphicon glyphicon-home"></span> Home</a></li>
 	</ul>
+	{%if g.username%}<div class="pull-right" style="padding: 10px 15px;"><span class="glyphicon glyphicon-user"></span> {{g.username}}</div>{%endif%}
+
 	<h3 class="text-muted" style="margin-top: 0;margin-bottom: 0;line-height: 40px;padding-bottom: 19px;">全文検索NAS</h3>
       </div>
 
