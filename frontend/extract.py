@@ -25,7 +25,9 @@ def process_output(cmdline, timeout=30):
     return stdoutdata
 
 def elinks(html):
-    elinks = subprocess.Popen(["/usr/bin/elinks","-dump","-dump-width","1000"],shell=False,stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+    my_env = os.environ.copy()
+    my_env["LANG"] = "ja_JP.utf8"
+    elinks = subprocess.Popen(["/usr/bin/elinks","-dump","-dump-width","1000","-dump-charset","utf-8"],shell=False,stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.PIPE,env=my_env)
     text, stderrdata = elinks.communicate(html)
     if elinks.wait() != 0: raise IndexingFailureException(stderrdata)
     return text

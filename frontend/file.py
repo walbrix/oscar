@@ -253,6 +253,7 @@ def process_create_index(shares, share_id, file_id, path):
         log.debug("Extracting %s..." % fullpath.decode("utf-8"))
         text = extract.extract(fullpath)
         rst = oscar.post("/file/%s/%s/contents" % (share_id, file_id), text, "text/plain")
+        log.debug(text)
         log.info("%s:%s(%s) index commited. %s" % (share_id, file_id, path, str(rst)))
         rst = oscar.delete("/indexing/%s/%s" % (share_id, file_id))
         log.info("%s:%s(%s) marked as done. %s" % (share_id, file_id, path, str(rst)))
