@@ -7,6 +7,8 @@ import subprocess
 import nkf
 import oscar
 import officex
+import xlrd
+import StringIO
 
 class IndexingFailureException(Exception):
     def __init__(self, str):
@@ -47,22 +49,20 @@ def ppthtml(os_pathname):
     text = re.sub(ur'-+', '-', text)
     return text.encode("utf-8")
 
-def xlhtml(os_pathname):
-    html = process_output(["/usr/bin/xlhtml",os_pathname])
-    lynx = subprocess.Popen(["/usr/bin/lynx","-stdin","-dump","-width","1000"],shell=False,stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-    text, stderrdata = lynx.communicate(html)
-    if lynx.wait() != 0: raise IndexingFailureException(stderrdata)
-    text = re.sub(ur'[ 　]+', ' ', text.decode("utf-8"))
-    text = re.sub(ur'_+', '_', text)
-    text = re.sub(ur'-+', '-', text)
-    return text.encode("utf-8")
+def xl(os_pathname):
+    def cell2str(cell):
+        if (cell.ctype == xlrd.XL_CELL_TEXT): return cell.value
+        if (cell.ctype == xlrd.XL_CELL_NUMBER): return unicode(cell.value)
+        return ""
 
-def xlhtml(os_pathname):
-    html = process_output(["/usr/bin/xlhtml",os_pathname])
-    lynx = subprocess.Popen(["/usr/bin/lynx","-stdin","-dump","-width","1000"],shell=False,stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-    text, stderrdata = lynx.communicate(html)
-    if lynx.wait() != 0: raise IndexingFailureException(stderrdata)
-    text = re.sub(ur'[ 　]+', ' ', text.decode("utf-8"))
+    out = StringIO.StringIO()
+    book = xlrd.open_workbook(os_pathname)
+    for i in range(0, book.nsheets):
+        sheet = book.sheet_by_index(i)
+        out.write(sheet.name + '\n')
+        for row in range(0, sheet.nrows):
+            out.write('\t'.join(map(lambda col:cell2str(sheet.cell(row,col)), range(0, sheet.ncols))) + '\n')
+    text = re.sub(ur'[ 　]+', ' ', out.getvalue())
     return text.encode("utf-8")
 
 def wvhtml(os_pathname):
@@ -95,8 +95,8 @@ def officexml(os_pathname):
 
 def extract(fullpath):
     extractor_funcs = {
-        ".xls":xlhtml,
-        ".xlsx":officexml,
+        ".xls":xl,
+        ".xlsx":xl,
         ".doc":wvhtml,
         ".docx":officexml,
         ".ppt":ppthtml,
