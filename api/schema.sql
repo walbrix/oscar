@@ -29,3 +29,8 @@ create table indexing_queue (
 	num_retry int not null default 0,
 	primary key(share_id,file_id)
 ) engine=InnoDB;
+
+create table system_settings (
+	name varchar(64) primary key,
+	value text
+) engine=MyISAM;
