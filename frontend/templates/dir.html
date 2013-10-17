@@ -26,14 +26,18 @@
 
 {%if g.eden%}{%include "iehelp.html"%}{%endif%}
 
+<div id="search" style="margin-bottom:0.5em;">
 {%if count > 0%}
 <h3>検索キーワード <small>配下{{count}}件のファイルから検索します</small></h3>
 <input type="text" name="q" placeholder="keyword" size="50"{%if q%} value="{{q}}"{%endif%}/> <span class="search-in-progress" style="display:none;"><span class="glyphicon glyphicon-refresh"></span> 検索中...</span>
 {%else%}
 <div class="alert alert-warning">このフォルダの配下には検索可能なファイルがありません。</div>
 {%endif%}
+</div>
 
-<div id="search-results" style="margin:2em;">{%if results%}{%include "results.html"%}{%endif%}</div>
+<div></div>
+
+<div id="search-results" style="margin:1em;">{%if results%}{%include "results.html"%}{%endif%}</div>
 
 <h3>フォルダの内容</h3>
 <table class="table table-condensed table-hover">
