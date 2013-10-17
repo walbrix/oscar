@@ -21,11 +21,14 @@ class AdRequestHandler extends RequestHandlerBase {
   
 	@RequestMapping(value=Array("{size}"), method = Array(RequestMethod.GET))
 	@ResponseBody
-	def get(@PathVariable("size") size:String):TypedResult[String] = {
+	def get(@PathVariable("size") size:String):Tuple1[String] = {
+	  if (size.indexOf("x") < 0) throw new IllegalArgumentException()
+	  val wh = size.split("x").map(Integer.parseInt(_))
+	  val (width, height) = (wh(0),wh(1))
 	  if (isLicensed) {
-	    false
+	    Tuple1("")
 	  } else {
-	    TypedResult.success("http://va.walbrix.net/ad/ad%s.html".format(size))
+	    Tuple1("<iframe src=\"http://va.walbrix.net/ad/ad%s.html\" width=\"%d\" height=\"%d\" seamless=\"\"></iframe>".format(size,width,height))
 	  }
 	}
 
