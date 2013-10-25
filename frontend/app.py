@@ -93,5 +93,9 @@ def index():
 
     return flask.render_template("index.html", shares=shares,counts=counts, free=free, total=total, used=used, loadavg=os.getloadavg())
 
+@app.route("/a/<size>")
+def a(size):
+    return oscar.get("/ad/%s" % size)[0]
+
 if __name__ == "__main__":
     app.run(host='0.0.0.0',debug=True)

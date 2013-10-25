@@ -1,9 +1,11 @@
 $(document).ready(function () {
-  $("div.info").load("./info")
-
   $("input[name=q]").focus();
 
   var xhr, previousSearch;
+
+  $.get("/a/7" + "28x9" + "0", function(data) {
+    $("#search").after(data);
+  });
 
   $("input[name=q]").keyup(function() {
     var q = $("input[name=q]").val();

@@ -83,10 +83,7 @@ def text(os_pathname):
 def htmltotext(os_pathname):
     html = open(os_pathname).read()
     html = nkf.nkf("-w", html)
-    elinks = subprocess.Popen(["/usr/bin/elinks","-dump","-dump-width","1000"],shell=False,stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-    text, stderrdata = elinks.communicate(html)
-    if elinks.wait() != 0: raise IndexingFailureException(stderrdata)
-    return text
+    return elinks(html)
 
 def officexml(os_pathname):
     text = officex.extract(os_pathname)
