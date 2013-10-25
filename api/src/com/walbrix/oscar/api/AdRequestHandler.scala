@@ -28,7 +28,7 @@ class AdRequestHandler extends RequestHandlerBase {
 	  if (isLicensed) {
 	    Tuple1("")
 	  } else {
-	    Tuple1("<iframe src=\"http://va.walbrix.net/ad/ad%s.html\" width=\"%d\" height=\"%d\" seamless=\"\"></iframe>".format(size,width,height))
+	    Tuple1("<iframe scrolling=\"no\" src=\"http://va.walbrix.net/ad/ad%s.html\" width=\"%d\" height=\"%d\" seamless=\"\"></iframe>".format(size,width,height))
 	  }
 	}
 
