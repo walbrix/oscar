@@ -4,7 +4,7 @@
     <div class="media"{%if not result.available%}style="text-decoration:line-through;"{%endif%}>
       <a class="pull-left" href="{{share_id|build_path_link(result.path, result.name)}}">
 	{%if result.suggested_filetype%}
-	  <img src="{{ url_for('static', filename='img/'+result.suggested_filetype+'.png') }}"/>
+	  <img src="{{ url_for('static', filename='img/'+result.suggested_filetype+'.png') }}" width="64" height="64"/>
 	{%else%}
 	  <img src="{{ url_for('static', filename='img/unknown.png') }}" width="64"/>
 	{%endif%}
