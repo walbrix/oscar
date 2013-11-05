@@ -15,6 +15,6 @@ import org.junit.Test
 class AdRequestHandlerTest {
 	@Autowired private var requestHandler:AdRequestHandler = _
 	@Test def testGet() = {
-	  println(requestHandler.get("728x90"))
+	  println(requestHandler.get("ad728x90-bs3"))
 	}
 }
