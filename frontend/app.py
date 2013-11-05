@@ -95,7 +95,7 @@ def index():
 
 @app.route("/a/<size>")
 def a(size):
-    return oscar.get("/ad/%s" % size)[0]
+    return oscar.get("/ad/ad%s-bs3" % size)[0]
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0',debug=True)
