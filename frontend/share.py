@@ -4,7 +4,11 @@ import os
 import sys
 import re
 import flask
+
+import unirest
+
 import oscar
+import smbconf
 import share
 import search
 
@@ -17,8 +21,9 @@ def before_request():
     share_id_match = share_id_regex.match(flask.request.path)
     if not share_id_match: return
     share_id = share_id_match.groups()[0]
-    share = oscar.get_share(share_id)
-    if not share or share[2]: return
+    if not smbconf.share_exists(share_id): return
+    share = smbconf.get_share(share_id)
+    if share.guest_ok: return
     auth = flask.request.authorization
     if not auth or not oscar.check_smb_passwd(auth.username, auth.password):
         return flask.Response('You have to login with proper credentials', 401, {'WWW-Authenticate': 'Basic realm="Login Required"'})
@@ -26,10 +31,12 @@ def before_request():
 @app.route("/", defaults={"path":""})
 @app.route("/<path:path>/")
 def dir(share_id, path):
-    share = oscar.get_share(share_id)
-    if share == None: return "not found", 404
+    try:
+        share = smbconf.get_share(share_id)
+    except smbconf.NoSuchShareException:
+        return "not found", 404
 
-    real_path = os.path.join(share[1], path.encode("utf-8"))
+    real_path = share.real_path(path)
     if not os.path.isdir(real_path): return "not found", 404
     if not os.access(real_path ,os.R_OK|os.X_OK): return "Permission denied", 403
 
@@ -41,7 +48,8 @@ def dir(share_id, path):
             else:
                 path_elements.append((d, os.path.join(path_elements[-1][1], d)))
     
-    count = oscar.get("/file/%s/count" % share_id, {"path_prefix":'/' + path})[0]
+    response = unirest.get(oscar.api_root + "file/%s/count" % share.urlencoded_name(), params={"path_prefix":'/' + path})
+    count = response.body[0]
     q = flask.request.args.get("q")
 
     try:
@@ -58,8 +66,10 @@ def dir(share_id, path):
 @app.route('/search', defaults={'path': ''})
 @app.route("/<path:path>/search")
 def _search(share_id, path):
-    share = oscar.get_share(share_id)
-    if share == None: return "not found", 404
+    try:
+        share = smbconf.get_share(share_id)
+    except smbconf.NoSuchShareException:
+        return "not found", 404
 
     q = flask.request.args.get("q")
     results = search.mroonga_search(share, q, '/' + path)
@@ -67,7 +77,14 @@ def _search(share_id, path):
 
 @app.route('/dups.html')
 def dups(share_id):
-    dups = oscar.get("/file/%s/dups" % share_id)
+    try:
+        share = smbconf.get_share(share_id)
+    except smbconf.NoSuchShareException:
+        return "not found", 404
+
+    response = unirest.get(oscar.api_root + "file/%s/dups" % share.urlencoded_name())
+    if response.code != 200: raise oscar.RestException(response.code, response.raw_body)
+    dups = response.body
     return flask.render_template("dups.html", share_id=share_id, dups=dups)
 
 @app.route('/<filename>', defaults={'path': ''})
@@ -75,5 +92,5 @@ def dups(share_id):
 def file(share_id, path,filename):
     if share_id == "static":
         return flask.send_from_directory(os.path.join(app.root_path, "static", path), filename)
-    share = oscar.get_share(share_id)
-    return flask.send_from_directory(os.path.join(share[1], path.encode("utf-8")), filename.encode("utf-8"))
+    share = smbconf.get_share(share_id)
+    return flask.send_from_directory(share.real_path(path), filename.encode("utf-8"))

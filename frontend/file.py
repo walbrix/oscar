@@ -10,8 +10,10 @@ import logging
 import logging.handlers
 
 import pyinotify
+import unirest
 
 import oscar
+import smbconf
 import extract
 
 __author__ = "Walbrix Corporation"
@@ -209,18 +211,20 @@ def calcsum(args):
 
     with oscar.JobLock("calcsum.lock") as l:
         if not l: return
-        shares = oscar.get_share_list()
+        shares = smbconf.shares()
         for share in shares:
-            share_id = share[0]
-            log.debug("Processing share [%s]" % share_id)
-            base_dir = share[1]
-            files_to_be_scanned = oscar.get("/file/%s/nosum" % share_id, {"limit":"5000"})
+            log.debug("Processing share [%s]" % share.name)
+            response = unirest.get(oscar.api_root + "file/%s/nosum" % share.urlencoded_name(), params={"limit":5000})
+            if response.code != 200: raise oscar.RestException(response.code, response.raw_body)
+            files_to_be_scanned = response.body
             for file in files_to_be_scanned:
                 file_id, path, name = file[0], file[1], file[2]
-                os_pathname = os.path.join(base_dir, re.sub(r'^/+','',path).encode("utf-8"), name.encode("utf-8"))
+                os_pathname = share.real_path(os.path.join(path, name))
+                print os_pathname
                 if os.path.isfile(os_pathname):
-                    rst = oscar.post("/file/%s/%s/sha1sum" % (share_id,file_id), {"sha1sum":sha1sum(os_pathname)})            
-                    log.info("sha1sum calculation done for file %s:%s(%s,%s). %s" % (share_id,file_id, path, name, str(rst)))
+                    response = unirest.post(oscar.api_root + "file/%s/%s/sha1sum" % (share.urlencoded_name(),file_id), params={"sha1sum":sha1sum(os_pathname)})            
+                    if response.code != 200: raise oscar.RestException(response.code, response.raw_body)
+                    log.info("sha1sum calculation done for file %s:%s(%s,%s). %s" % (share.name,file_id, path, name, response.raw_body))
 
 def cleanup(args):
     with oscar.JobLock("cleanup.lock") as l:
@@ -241,45 +245,41 @@ def cleanup(args):
                     if not os.path.isfile(os_pathname):
                         unregister_file(share_id, base_dir, os_pathname)
 
-def process_create_index(shares, share_id, file_id, path):
+def process_create_index(share_id, file_id, path):
     try:
-        if share_id not in shares:
-            raise Exception("Share %s not found in smb.conf" % share_id)
-        share = shares[share_id]
-        base_dir = share[1]
-        fullpath = base_dir + path.encode("utf-8")
+        share = smbconf.get_share(share_id)
+        fullpath = share.real_path(path)
         if not os.path.isfile(fullpath):
             raise Exception("File %s not found" % fullpath)
         log.debug("Extracting %s..." % fullpath.decode("utf-8"))
         text = extract.extract(fullpath)
-        rst = oscar.post("/file/%s/%s/contents" % (share_id, file_id), text, "text/plain")
+        response = unirest.post(oscar.api_root + "file/%s/%s/contents" % (share.urlencoded_name(), file_id), headers={"content-type":"text/plain"}, params=bytearray(text))
         log.debug(text)
-        log.info("%s:%s(%s) index commited. %s" % (share_id, file_id, path, str(rst)))
-        rst = oscar.delete("/indexing/%s/%s" % (share_id, file_id))
-        log.info("%s:%s(%s) marked as done. %s" % (share_id, file_id, path, str(rst)))
+        if response.code != 200: raise oscar.RestException(response.code, response.raw_body)
+        log.info("%s:%s(%s) index commited. %s" % (share_id, file_id, path, response.raw_body))
+        response = unirest.delete(oscar.api_root + "indexing/%s/%s" % (share.urlencoded_name(), file_id))
+        if response.code != 200: raise oscar.RestException(response.code, response.raw_body)
+        log.info("%s:%s(%s) marked as done. %s" % (share_id, file_id, path, response.raw_body))
     except KeyboardInterrupt, e:
-        raise e
-    except urllib2.HTTPError, e:
-        log.error(e.read())
         raise e
     except:
         log.exception("Exception")
-        rst = oscar.post("/indexing/%s/%s/fail" % (share_id,file_id), {})
-        log.info("Indexing for %s:%s(%s) marked as fail: %s" % (share_id, file_id, path, str(rst)))
+        response = unirest.post(oscar.api_root + "indexing/%s/%s/fail" % (share.urlencoded_name(),file_id))
+        if response.code == 200:
+            log.info("Indexing for %s:%s(%s) marked as fail: %s" % (share_id, file_id, path, response.raw_body))
+        else:
+            log.error("Failed to mark indexing failed")
 
 def create_index(args):
     with oscar.JobLock("indexing.lock") as l:
         if not l: return # other index process has still been runnig
 
-        shares = {}
-        for share in oscar.get_share_list():
-            shares[share[0]] = share
         queue = oscar.get("/indexing/", {"limit":str(args.limit)})
         for indexing_target in queue:
             share_id = indexing_target[0]
             file_id = indexing_target[1]
             path = indexing_target[2]
-            process_create_index(shares, share_id,file_id,path)
+            process_create_index(share_id,file_id,path)
 
 def reset_index(args):
     log.info("ATTEMPTING FULL RESET")
