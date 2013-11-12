@@ -8,8 +8,8 @@ import json
 import oscar
 import unirest
 
-def mroonga_search(share, q, path_prefix="/"):
-    response = unirest.get(oscar.api_root + "file/%s/search" % share.urlencoded_name(), params={"q":q, "path_prefix":path_prefix})
+def mroonga_search(share, q, path_prefix="/",offset=0,limit=10):
+    response = unirest.get(oscar.api_root + "file/%s/search" % share.urlencoded_name(), params={"q":q, "path_prefix":path_prefix,"offset":str(offset),"limit":str(limit)})
     if response.code != 200: raise oscar.RestException(response.code, response.raw_body)
 
     results = response.body
@@ -18,7 +18,6 @@ def mroonga_search(share, q, path_prefix="/"):
         path = row[0]["path"]
         name = row[0]["name"]
         os_pathname = share.real_path(os.path.join(path, name))
-        print os_pathname
         return {
             "id":row[0]["id"],
             "path":path,
