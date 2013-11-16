@@ -14,7 +14,7 @@ def _get_parser():
     timestamp = os.stat(smb_conf).st_mtime
     global _smbconf, _smbconf_timestamp
     if not _smbconf or not _smbconf_timestamp or _smbconf_timestamp < timestamp:
-        _smbconf = ConfigParser.SafeConfigParser({"guest ok":"no","writable":"no","locking":"yes"})
+        _smbconf = ConfigParser.SafeConfigParser({"guest ok":"no","writable":"no","locking":"yes","valid users":None})
         _smbconf.read(smb_conf)
         _smbconf_timestamp = timestamp
     return _smbconf
@@ -26,13 +26,14 @@ def sections():
     return _get_parser().sections()
 
 class Share:
-    def __init__(self, name, path, guest_ok=False, writable=False, comment=None,locking=True):
+    def __init__(self, name, path, guest_ok=False, writable=False, comment=None,locking=True,valid_users=None):
         self.name = name if isinstance(name, unicode) else name.decode("utf-8")
         self.path = path
         self.guest_ok = guest_ok
         self.writable = writable
         self.comment = comment if isinstance(comment, unicode) else comment.decode("utf-8")
         self.locking = locking
+        self.valid_users = valid_users
 
     def real_path(self, path):
         if isinstance(path, unicode): path = path.encode("utf-8")
@@ -41,6 +42,14 @@ class Share:
 
     def urlencoded_name(self):
         return urllib2.quote(self.name.encode("utf-8"))
+
+    def is_user_valid(self, user, groups):
+        if self.valid_users == None: return True
+        valid_users = map(lambda x:x.lower(), self.valid_users.split())
+        if user.lower() in valid_users: return True
+        for group in groups:
+            if '@' + group.lower() in valid_users: return True
+        return False
 
 class NoSuchShareException(Exception):
     def __init__(self, name):
@@ -70,12 +79,14 @@ def get_share(name, parser=None):
     writable = parser.getboolean(name, "writable")
     comment = parser.get(name, "comment") if parser.has_option(name, "comment") else (u"共有フォルダ" if guest_ok else u"アクセス制限された共有フォルダ")
     locking = parser.getboolean(name, "locking")
-    return Share(name, path, guest_ok=guest_ok, writable=writable, comment=comment,locking=locking)
+    valid_users = parser.get(name, "valid users")
+    return Share(name, path, guest_ok=guest_ok, writable=writable, comment=comment,locking=locking,valid_users=valid_users)
 
 if __name__ == "__main__":
     for share in shares():
         print share.name.encode("utf-8")
         print share.comment.encode("utf-8")
+        print share.valid_users
 
     print get_share(u"しぇあー").urlencoded_name()
     print get_share(u"ないしぇあー")

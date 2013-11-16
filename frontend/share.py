@@ -3,6 +3,7 @@
 import os
 import sys
 import re
+import grp
 import flask
 
 import unirest
@@ -25,7 +26,7 @@ def before_request():
     share = smbconf.get_share(share_id)
     if share.guest_ok: return
     auth = flask.request.authorization
-    if not auth or not oscar.check_smb_passwd(auth.username, auth.password):
+    if not auth or not oscar.check_smb_passwd(auth.username, auth.password) or not share.is_user_valid(auth.username, map(lambda x:x.gr_name, filter(lambda x:auth.username.lower() in x.gr_mem, grp.getgrall()))):
         return flask.Response('You have to login with proper credentials', 401, {'WWW-Authenticate': 'Basic realm="Login Required"'})
 
 def _build_path_elements(path):

@@ -58,9 +58,13 @@ def size_string(size):
 
 @app.before_request
 def before_request():
+    private_access = private_address_regex.match(flask.request.remote_addr)
     # eden == MSIE in private network
-    flask.g.eden = "MSIE " in flask.request.headers.get('User-Agent') and private_address_regex.match(flask.request.remote_addr)
-    flask.g.username = flask.request.authorization.username if flask.request.authorization else None
+    flask.g.eden = "MSIE " in flask.request.headers.get('User-Agent') and private_access
+    auth = flask.request.authorization
+    if not private_access and (not auth or not oscar.check_smb_passwd(auth.username, auth.password)):
+        return flask.Response('You have to login with proper credentials', 401, {'WWW-Authenticate': 'Basic realm="Login Required"'})
+    flask.g.username = auth.username if auth else None
 
 @app.route("/")
 def index():
