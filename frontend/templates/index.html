@@ -6,8 +6,8 @@
 <h3>利用可能な共有フォルダ</h3>
 <dl class="dl-horizontal">
 {%for share in shares%}
-  <dt><big>{%if not share[2] %}<span class="glyphicon glyphicon-lock"></span> {%endif%}<a href="{{share[0]}}/">{{share[0]}} <span class="glyphicon glyphicon-folder-close"></span></a></big></dt>
-  <dd>{{share[3]}} (検索可能ファイル数{{counts[share[0]]}}件) {%if g.eden%} <a class="btn btn-success btn-xs" href="file://///{{request.environ["SERVER_NAME"]}}/{{share[0]}}">エクスプローラで開く</a> <a data-toggle="modal" href="#iehelp"><span class="glyphicon glyphicon-question-sign"></span></a>{%endif%}</dd>
+  <dt><big>{%if not share.guest_ok %}<span class="glyphicon glyphicon-lock"></span> {%endif%}<a href="{{share.name}}/">{{share.name}} <span class="glyphicon glyphicon-folder-close"></span></a></big></dt>
+  <dd>{{share.comment}} (検索可能ファイル数{{counts[share.name]}}件) {%if g.eden%} <a class="btn btn-success btn-xs" href="file://///{{request.environ["SERVER_NAME"]}}/{{share.name}}">エクスプローラで開く</a> <a data-toggle="modal" href="#iehelp"><span class="glyphicon glyphicon-question-sign"></span></a>{%endif%}</dd>
 {%endfor%}
 </dl>
 
