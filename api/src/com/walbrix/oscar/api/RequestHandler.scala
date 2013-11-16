@@ -61,7 +61,7 @@ class RequestHandler extends RequestHandlerBase {
 		queryForSeq("select id,path,name from files where share_id=? and (path=? or path like ?) and sha1sum='XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX' limit ?",
 		    shareId, pathPrefix, joinPathElements(pathPrefix, "%"), limit).map { row=>
 		    (row("id"),row("path"),row("name")):(String,String,String)
-		}
+		}.filter(_._1 != "") // g(m)roongaのバグ？でなぜかIDが空文字列の時があったため
 	}
 	
 	private def registerFile(shareId:String,path:String,name:String,atime:Timestamp,ctime:Timestamp,mtime:Timestamp,size:Long):TypedResult[String] = {
