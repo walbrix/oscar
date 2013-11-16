@@ -1,0 +1,53 @@
+{%extends "page.html"%}
+{%block title%}/{{share_id}}{%endblock%}
+
+{%block contents%}
+<div style="margin-top:1em;">
+  <ol class="breadcrumb">
+    <li><a href="/"><span class="glyphicon glyphicon-home"></span></a></li>
+    <li><a href="{{share_id|build_path_link}}"><span class="glyphicon glyphicon-folder-close"></span> {{share_id}}</a></li>
+    {% for path_element in path_elements %}
+        <li><a href="{{share_id|build_path_link(path_element[1])}}"><span class="glyphicon glyphicon-folder-close"></span> {{path_element[0]}} </a></li>
+    {% endfor %}
+    <li class="active"><span class="glyphicon glyphicon-search"></span> 検索</li>
+  </ol>
+</div>
+
+<form method="get" action="./search">
+	<input type="text" name="q" value="{%if q%}{{q}}{%endif%}"/>
+	<input type="submit" value="{%if q%}再{%endif%}検索"/>
+	<a class="btn btn-default btn-sm" href="./"><span class="glyphicon glyphicon-folder-close"></span> フォルダへ戻る</a>
+</form>
+
+{%if q%}
+  {%if count > 0%}
+    {%set max_page = (count - 1) // limit + 1%}
+    <h4>'{{q}}'の検索結果 <small>{{count}}件中{{results|length}}件 ({{max_page}}ページ中 {{page}}ページ目)</small></h4>
+    {%if page>1%}<p><a class="btn btn-default" href="./search?q={{q|urlencode}}{%if page > 2%}&amp;page={{page-1}}{%endif%}">前のページ</a></p>{%endif%}
+    {%for result in results%}
+      <div class="media"{%if not result.available%}style="text-decoration:line-through;"{%endif%}>
+        <a class="pull-left" href="{{share_id|build_path_link(result.path, result.name)}}">
+        {%if result.suggested_filetype%}
+          <img src="{{ url_for('static', filename='img/'+result.suggested_filetype+'.png') }}" width="64" height="64"/>
+        {%else%}
+          <img src="{{ url_for('static', filename='img/unknown.png') }}" width="64"/>
+        {%endif%}
+        </a>
+        <div class="media-body">
+          <h4 class="media-heading"><a href="{{share_id|build_path_link(result.path, result.name)}}">{%if result.name_snippets|length > 0%}{%for name_snippet in result.name_snippets%}{{name_snippet|safe}}{%endfor%}{%else%}{{result.name}}{%endif%}</a> <small>{{result.size|size_string}} {{result.mtime|datetime_string}}更新</small></h4>
+    場所: <a href="{{share_id|build_path_link(result.path)}}">{%if result.path_snippets|length > 0%}{%for path_snippet in result.path_snippets%}{{path_snippet|safe}}{%endfor%}{%else%}{{result.path}}{%endif%}</a><br/>
+          {%for contents_snippet in result.contents_snippets%}...{{contents_snippet|safe}}...{%endfor%}
+        </div>
+      </div>
+    {%endfor%}
+    <br/>
+    <p>{{count}}件中{{results|length}}件 ({{max_page}}ページ中 {{page}}ページ目)
+    {%if page < max_page%}<a class="btn btn-default" href="./search?q={{q|urlencode}}&amp;page={{page+1}}">次のページ</a>{%endif%}</p>
+  {%else%}
+    <h4>'{{q}}'の検索結果</h4>
+    該当するファイルはありません。
+  {%endif%}
+{%else%}
+  <p>検索キーワードを入力してください</p>
+{%endif%}
+{%endblock%}

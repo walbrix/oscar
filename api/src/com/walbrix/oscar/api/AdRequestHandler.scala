@@ -6,6 +6,8 @@ import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.bind.annotation.RequestMethod
 import org.springframework.web.bind.annotation.ResponseBody
 import org.springframework.web.bind.annotation.PathVariable
+import java.net.URL
+import org.apache.commons.io.IOUtils
 
 @Controller
 @RequestMapping(Array("ad"))
@@ -19,16 +21,19 @@ class AdRequestHandler extends RequestHandlerBase {
 		}
 	}
   
-	@RequestMapping(value=Array("{size}"), method = Array(RequestMethod.GET))
+	@RequestMapping(value=Array("{name}"), method = Array(RequestMethod.GET))
 	@ResponseBody
-	def get(@PathVariable("size") size:String):Tuple1[String] = {
-	  if (size.indexOf("x") < 0) throw new IllegalArgumentException()
-	  val wh = size.split("x").map(Integer.parseInt(_))
-	  val (width, height) = (wh(0),wh(1))
+	def get(@PathVariable("name") name:String):Tuple1[String] = {
 	  if (isLicensed) {
 	    Tuple1("")
 	  } else {
-	    Tuple1("<iframe scrolling=\"no\" src=\"http://va.walbrix.net/ad/ad%s.html\" width=\"%d\" height=\"%d\" seamless=\"\"></iframe>".format(size,width,height))
+	    val is = new URL("http://ad.walbrix.com/oscar/%s.html".format(name)).openStream()
+	    try{
+	    	Tuple1(IOUtils.toString(is))
+	    }
+	    finally {
+	    	is.close()
+	    }
 	  }
 	}
 

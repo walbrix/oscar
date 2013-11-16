@@ -107,15 +107,9 @@ class RequestHandler extends RequestHandlerBase {
 	
 	@RequestMapping(value=Array("{share_id}/bulk_delete"), method=Array(RequestMethod.POST), consumes=Array("application/json"))
 	@ResponseBody
-	def deleteBulk(@PathVariable("share_id") shareId:String,@RequestBody fileIds:Seq[String]):TypedResult[Int] = {
-		TypedResult.success(
-			fileIds.map { fileId =>
-				update("delete from files where share_id=? and id=?", shareId, fileId) match {
-				  case 0 => 0
-				  case _ => 1
-				}
-			}.sum
-		)
+	def deleteBulk(@PathVariable("share_id") shareId:String,@RequestBody fileIds:Seq[String]):Result = {
+		val cond = fileIds.map("'" + _ + "'").mkString(",")
+		update("delete from files where share_id=? and id in %s".format(cond), shareId) > 0
 	}
 	
 	@RequestMapping(value=Array("{share_id}"), method=Array(RequestMethod.DELETE))

@@ -31,6 +31,12 @@ if os.path.exists(__CONFIG_FILE):
     for key,value in json.load(open(__CONFIG_FILE, "r")).items():
         globals()[key] = value
 
+class RestException(Exception):
+    def __init__(self, code, body):
+        self.code = code
+        self.body = body
+        Exception.__init__(self, "HTTP Error: %d" % code)
+
 # unicode文字列入りのdictを都合のいいバイト列に直す
 def encoded_dict(in_dict):
     out_dict = {}
@@ -45,7 +51,6 @@ def encoded_dict(in_dict):
  
 # GETメソッドを実行し、返値をJSONデコードして返す
 def get(func, params = {}):
-    print func
     url = api_root + "/" + urllib.quote(func)
     if params != None and len(params) > 0:
         url += "?" + urllib.urlencode(encoded_dict(params))

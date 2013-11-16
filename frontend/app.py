@@ -15,7 +15,9 @@ app.register_blueprint(share.app, url_prefix="/<share_id>")
 handler = logging.handlers.RotatingFileHandler("/var/log/oscar/app.log", 'a', 1024*1024*100,9)
 app.logger.addHandler(handler)
 
+import unirest
 import oscar
+import smbconf
 
 private_address_regex = re.compile(r"(^127\.0\.0\.1)|(^10\.)|(^172\.1[6-9]\.)|(^172\.2[0-9]\.)|(^172\.3[0-1]\.)|(^192\.168\.)")
 
@@ -62,17 +64,15 @@ def before_request():
 
 @app.route("/")
 def index():
-    shares = oscar.get_share_list()
+    shares = smbconf.shares()
     counts = {}
     for share in shares:
-        share_id = share[0]
-        try:
-            count = oscar.get("/file/%s/count" % share_id, {"path_prefix":'/'})[0]
-            counts[share_id] = count
-        except urllib2.HTTPError, e:
-            app.logger.exception("/file/{share_id}/count")
-            app.logger.error(e.read())
+        response = unirest.get(oscar.api_root + "file/%s/count" % share.urlencoded_name(), params={"path_prefix":'/'})
+        if response.code != 200:
+            app.logger.error("/file/{share.name}/count")
+            app.logger.error(response.raw_body)
             return flask.render_template("error.html")
+        counts[share.name] = response.body[0]
 
     st = os.statvfs("/")
 
@@ -95,7 +95,7 @@ def index():
 
 @app.route("/a/<size>")
 def a(size):
-    return oscar.get("/ad/%s" % size)[0]
+    return oscar.get("/ad/ad%s-bs3" % size)[0]
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0',debug=True)
