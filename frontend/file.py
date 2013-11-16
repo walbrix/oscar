@@ -349,6 +349,9 @@ if __name__ == '__main__':
         log.error(e.read())
         log.exception('Got an HTTP Error')
         raise
+    except oscar.RestException, e:
+        log.error(e.body)
+        log.exception('Got an HTTP Error')
     except:
         log.exception("Got an exception")
         raise
