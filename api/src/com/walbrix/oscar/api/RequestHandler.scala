@@ -30,7 +30,16 @@ class RequestHandler extends RequestHandlerBase {
 	implicit private def row2file(row:Row):File =
 		File(row("id"), row("path"), row("name"), 
 		    row("atime"), row("ctime"), row("mtime"), row("size"),row("sha1sum"),row("updated_at"))
-	// <4096 == ""
+
+	@RequestMapping(value=Array("count"), method = Array(RequestMethod.GET))
+  	@ResponseBody
+	def count():Map[String,Long] = {
+		queryForSeq("select share_id,count(share_id) as cnt from files group by share_id").map { row =>
+		  (row("share_id"):String,row("cnt"):Long)
+		}.toMap
+	}
+
+  	// <4096 == ""
 	// <65536 == "0"
 	// <1048576 == "00"
 	// <16777216 == "000"
