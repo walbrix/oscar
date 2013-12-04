@@ -15,7 +15,7 @@ import search
 
 app = flask.Blueprint(__name__, "share")
 
-share_id_regex = re.compile(r'^/(.+)/')
+share_id_regex = re.compile(r'^/(.+?)/')
 
 @app.before_request
 def before_request():
