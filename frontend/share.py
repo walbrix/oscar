@@ -54,6 +54,10 @@ def dir(share_id, path):
     path_elements = _build_path_elements(path)
     
     response = unirest.get(oscar.api_root + "file/%s/count" % share.urlencoded_name(), params={"path_prefix":'/' + path})
+    if response.code != 200:
+        flask.current_app.logger.error("/file/{share.name}/count")
+        flask.current_app.logger.error(response.raw_body)
+        raise oscar.RestException(response.code, response.raw_body)
     count = response.body[0]
     q = flask.request.args.get("q")
 
