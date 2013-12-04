@@ -79,6 +79,9 @@ def pdftotext(os_pathname):
     return nkf.nkf("-w", text)
 
 def text(os_pathname):
+    if os.stat(os_pathname).st_size > 1024 * 1024 * 10:
+        return "***TOO LARGE TEXT FILE***" 
+    # else
     text = open(os_pathname).read()
     return nkf.nkf("-w", text)
 
