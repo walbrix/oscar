@@ -45,10 +45,11 @@ class Share:
 
     def is_user_valid(self, user, groups):
         if self.valid_users == None: return True
-        valid_users = map(lambda x:x.lower(), self.valid_users.split())
+        valid_users = map(lambda x:x.lower(), re.split(r' *,? *', self.valid_users))
         if user.lower() in valid_users: return True
         for group in groups:
-            if '@' + group.lower() in valid_users: return True
+            for group_prefix in ('@','+','@+','+@'):
+                if group_prefix + group.lower() in valid_users: return True
         return False
 
 class NoSuchShareException(Exception):
@@ -67,6 +68,7 @@ def shares():
     return share_list
 
 def share_exists(name):
+    if isinstance(name, unicode): name = name.encode("utf-8")
     return name not in _ignoreable_sections and _get_parser().has_section(name)
 
 def get_share(name, parser=None):
