@@ -38,7 +38,7 @@ def logger_init(name, verbose=False, filename=None):
     return log
 
 def is_ignoreable(filename):
-    ignore_prefixes = [".", "#"]
+    ignore_prefixes = [".", "#", "~$"]
     ignore_suffixes = [".tmp", ".bak", "~"]
     basename = os.path.basename(filename)
     if basename == ".DS_Store": return True
