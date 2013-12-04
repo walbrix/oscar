@@ -72,13 +72,16 @@ def before_request():
 def index():
     shares = smbconf.shares()
     counts = {}
-    for share in shares:
-        response = unirest.get(oscar.api_root + "file/%s/count" % share.urlencoded_name(), params={"path_prefix":'/'})
-        if response.code != 200:
-            app.logger.error("/file/{share.name}/count")
-            app.logger.error(response.raw_body)
-            return flask.render_template("error.html")
-        counts[share.name] = response.body[0]
+    for share in shares: counts[share.name] = 0
+
+    response = unirest.get(oscar.api_root + "file/count")
+    if response.code != 200:
+        app.logger.error("/file/count")
+        app.logger.error(response.raw_body)
+        return flask.render_template("error.html")
+
+    for share_id,count in response.body.iteritems():
+        counts[share_id] = count
 
     st = os.statvfs("/")
 
